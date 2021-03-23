@@ -1,14 +1,16 @@
-import { FileReaderError } from "./modules/error-handler.js";
+import { FileReaderError } from './modules/error-handler.js';
+import { Scanner } from './modules/scanner.js'
 
 const startBtnEl = document.getElementById('start');
 const inputEl = document.getElementById('input');
 const contentEl = document.getElementById('content');
 
 let code = '';
+
 inputEl.addEventListener('change', getFile);
+startBtnEl.addEventListener('click', interpret);
 
-
-// throws FileReaderError
+// throws FileReaderError TODO: catch it!
 function getFile(e) {
     const input = e.target;
     if('files' in input && input.files.length > 0) {
@@ -23,5 +25,12 @@ function getFile(e) {
         }).catch(error => {
             throw new FileReaderError('File reading error: ' + error);
         })
+    }
+}
+
+function interpret() {
+    if (code != '') {
+        let scanner = new Scanner(code);
+        scanner.getToken();
     }
 }
