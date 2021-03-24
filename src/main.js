@@ -1,9 +1,12 @@
 import { FileReaderError } from './modules/error-handler.js';
 import { Scanner } from './modules/scanner.js'
 
+//TODO: clean up positions according to html
 const startBtnEl = document.getElementById('start');
 const inputEl = document.getElementById('input');
 const contentEl = document.getElementById('content');
+const tokensDiv = document.getElementById('content');
+const stateEL = document.getElementById('state-of-content');
 
 let code = '';
 
@@ -19,18 +22,30 @@ function getFile(e) {
             reader.onerror = error => reject(error);
             reader.readAsText(input.files[0]);
         }).then(content => {
-            if (!code.length) throw new FileReaderError('Empty file!');
+            if (!content) throw new FileReaderError('Empty file!');
+            stateEL.textContent = "Code to interpret: ";
             code = content;
             contentEl.innerHTML = content;
         }).catch(error => {
+            stateEL.textContent = "Empty!";
             throw new FileReaderError('File reading error: ' + error.message);
         })
     }
 }
 
 function interpret() {
-    if (code != '') {
-        let scanner = new Scanner(code);
-        scanner.getToken();
-    }
+    if (code === '') return;
+    let scanner = new Scanner(code);
+
+    let token = undefined;
+    do {
+        token = scanner.getToken();
+        console.log(token);
+        let tokenEL = document.createElement('pre');
+        tokenEL.innerHTML = token.toString();
+        tokensDiv.appendChild(tokenEL);
+    } while(token.type !== 'EOF')
+
+    
+
 }
