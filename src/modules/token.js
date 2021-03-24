@@ -14,6 +14,57 @@ export class Token {
 }
 
 export let tokenType = {
-    TEST : 'TEST',
-    EOF : 'EOF'
+    IDENTIFIER : 'IDENTIFIER',
+    EOF : 'EOF',
+    KEYWORD : 'KEYWORD',
+    FLOAT : 'FLOAT',
+    INT : 'INT',
+    COMMENT : 'COMMENT',
+    PARENTHOPEN : 'PARENTHOPEN',
+    PARENTHCLOSE : 'PARENTHCLOSE',
+    BRACKETOPEN : 'BRACKETOPEN',
+    BRACKETCLOSE : 'BRACKETCLOSE',
+    COMMA : 'COMMA',
+    DOT : 'DOT',
+    SEMICOLON : 'SEMICOLON',
+    PLUS : 'PLUS',
+    MINUS : 'MINUS',
+    MULTIPLY : 'MULTIPLY',
+}
+
+export let keyWords = [
+    'animation',
+    'canvas',
+    'circle',
+    'color',
+    'height',
+    'iterations',
+    'move',
+    'polygon',
+    'posx',
+    'posy',
+    'radius',
+    'rectangle',
+    'rgb',
+    'rotate',
+    'scale',
+    'shearx',
+    'sheary',
+    'show',
+    'step',
+    'triangle',
+    'width'
+]
+
+export let specialChar = {    
+    '(' : tokenType.PARENTHOPEN,
+    ')' : tokenType.PARENTHCLOSE,
+    '[' : tokenType.BRACKETOPEN,
+    ']' : tokenType.BRACKETCLOSE,
+    ',' : tokenType.COMMA,
+    '.' : tokenType.DOT,
+    ';' : tokenType.SEMICOLON,
+    '+' : tokenType.PLUS,
+    '-' : tokenType.MINUS,
+    '*' : tokenType.MULTIPLY,
 }
