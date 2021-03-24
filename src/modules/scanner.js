@@ -16,21 +16,29 @@ export class Scanner {
         this.charNum = 0;
         this.pos = 0;
         this.codeLength = code.length;
+
+        this.currentChar = '';
+        this.nextChar = this.code[0];
     }
 
     getToken() {
+        if (this.pos >= this.codeLength) return new Token(tokenType.EOF; )
+
         console.log(this.code);
+
     }
 
-    skipWhite() {
+    //TODO: check for browser specific whites
+    _skipWhite() {
         while(this.pos <= this.codeLength) {
-
+            
         }
     }
 
-    moveToNext() {
-        
+    _moveCursor() {
+
     }
 
+    
 }
 

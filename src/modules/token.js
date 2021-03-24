@@ -1,3 +1,4 @@
+//TODO:: Default value of null
 export class Token {
     constructor(type, value, lineNum, charNum) {
         this.type = type;
@@ -8,5 +9,6 @@ export class Token {
 }
 
 export let tokenType = {
-    TEST : "TEST"
+    TEST : "TEST",
+    EOF : "EOF"
 }

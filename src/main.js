@@ -10,7 +10,6 @@ let code = '';
 inputEl.addEventListener('change', getFile);
 startBtnEl.addEventListener('click', interpret);
 
-// throws FileReaderError TODO: catch it!
 function getFile(e) {
     const input = e.target;
     if('files' in input && input.files.length > 0) {
@@ -20,10 +19,11 @@ function getFile(e) {
             reader.onerror = error => reject(error);
             reader.readAsText(input.files[0]);
         }).then(content => {
+            if (!code.length) throw new FileReaderError('Empty file!');
             code = content;
             contentEl.innerHTML = content;
         }).catch(error => {
-            throw new FileReaderError('File reading error: ' + error);
+            throw new FileReaderError('File reading error: ' + error.message);
         })
     }
 }
