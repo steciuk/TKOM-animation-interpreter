@@ -14,22 +14,22 @@ export class Scanner {
     }
 
     getToken() {
-        while (true){
-            if (!this.nextChar) return new Token(tokenType.EOF, this.lineNum, this.charNum);
-            this._skipWhite();
+        this._skipWhite();
+        if (!this.nextChar) return new Token(tokenType.EOF, this.lineNum, this.charNum);
 
-            //comment
-            if (this.currentChar === '#') return this._processComment();
-            //identifier
-            if (isAlpha(this.currentChar)) return this._processIdentifierOrKeyWord();
-            //float and int
-            if (isNumber(this.currentChar)) return this._processNumber();
-            //special chars
-            if (specialChar[this.currentChar]) return this._processSpecialChar();
+        //TODO: nie sprawdzaj pierwszego znaku tylko obsłuhuj to w funkcjach processfunc
+        //comment
+        if (this.currentChar === '#') return this._processComment();
+        //identifier
+        if (isAlpha(this.currentChar)) return this._processIdentifierOrKeyWord();
+        //float and int
+        if (isNumber(this.currentChar)) return this._processNumber();
+        //special chars
+        if (specialChar[this.currentChar]) return this._processSpecialChar();
 
-            //no token fit
-            throw new SyntaxError("Unknown token", this.lineNum, this.charNum);
-        }
+        //no token fit
+        //TODO: Unknown token a nie Error
+        throw new SyntaxError("Unknown token", this.lineNum, this.charNum);
     }
 
     _processSpecialChar() {
@@ -62,9 +62,10 @@ export class Scanner {
         let tokenCharNum = this.charNum;
 
         // 0+number or 0+alpha error
+        //TODO: Lexic error not Syntax Error
         if (this.currentChar === '0' && isAlphaNum(this.nextChar)) throw new SyntaxError(this.currentChar + this.nextChar + "is NaN", tokenLineNum, tokenCharNum);
-        
-        //float
+        //TODO: Zajmij się nextcharem, zrób obsluge zrodla
+        //float TODO: floaty z wieloma cyframi
         if (this.nextChar === '.'){
             tokenValue = this.currentChar + '.';
             this._moveCursor(2);
@@ -81,15 +82,18 @@ export class Scanner {
     }
 
     _processIdentifierOrKeyWord() {
+        //TODO: redundancja
         let tokenValue = "";
         let tokenLineNum = this.lineNum;
         let tokenCharNum = this.charNum;
+        //TODO: isalpha
         while(this.currentChar !== undefined && isAlphaNum(this.currentChar)) {
             tokenValue += this.currentChar;
             this._moveCursor(1);
         }
 
-        //keyword
+        //TODO: max długość identifier
+        //keyword TODO: na tokentypy
         if (keyWords.includes(tokenValue)) return new Token(tokenType.KEYWORD, tokenLineNum, tokenCharNum, {value: tokenValue});
         
         //identifier

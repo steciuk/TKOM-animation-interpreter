@@ -41,9 +41,9 @@ function interpret() {
     do {
         token = scanner.getToken();
         console.log(token);
-        let tokenEL = document.createElement('pre');
-        tokenEL.innerHTML = token.toString();
-        tokensDiv.appendChild(tokenEL);
+        //let tokenEL = document.createElement('pre');
+        //tokenEL.innerHTML = token.toString();
+        //tokensDiv.appendChild(tokenEL);
     } while(token.type !== 'EOF')
 
     

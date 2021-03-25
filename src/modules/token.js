@@ -32,6 +32,7 @@ export let tokenType = {
     MULTIPLY : 'MULTIPLY',
 }
 
+//TODO: zamień na tokentypy
 export let keyWords = [
     'animation',
     'canvas',
