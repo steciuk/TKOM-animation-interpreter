@@ -34,7 +34,7 @@ Język pozwoli na:
 	 - `operation1 * operation2 * operation3`
  - Grupowanie obiektów. Zgrupowane obiekty będą traktowanie tak samo jak obiekty proste (możliwe będzie dokonywania transformacji na całych grupach na raz oraz grupować je w większe grupy)
 	 - `group(object1, object2, object3...)`
-- Rysowanie obiektów:
+ - Rysowanie obiektów:
 	 - `draw(object)`
  - Tworzenie pętli typu for, dla której definiować będzie można ilość wykonań, podanie 0 jako argument pętli powoduje wykonywanie się jej w nieskończoność:
 	 - `for(n){operation};`
@@ -178,12 +178,12 @@ for(0){
 ### Gramatyka:
 Między składowymi poniższych konstrukcji może być dowolna liczba białych znaków.
 ```
-program = {(command, ";") | comment};
+program = {(command, ";") | comment | func_definition};
 comment = "#", { "0x00".."0xFF" - "#" }, "#";
 
-command = expression | func_definition;
+command = (expression, ";") | for | if;
 func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {expression, ";"}, "return", [id], ";", "}";
-expression = assigment | func_call | transformation | for | if;
+expression = assigment | func_call | transformation;
 assigment = var_or_attribute, "=", arith_expression;
 func_call = (id, "(", [args], ")") | "(", args, ")"";
 args = (var_or_attribute | number), {",", (var_or_attribute | number)}
@@ -195,8 +195,8 @@ mult_expression = ["-"], term;
 term = var_or_attribute | func_call | number | ("(", arith_expression, ")";
 var_or_attribute = id, {".", id};
 
-for = "for", "(", expression, ")", "{", {expression}, "}";
-if = "if", "(", condition, ")", "{", {expression}, "}", ["else", "{", {expression}, "}"];
+for = "for", "(", expression, ")", "{", {commmand}, "}";
+if = "if", "(", condition, ")", "{", {command}, "}", ["else", "{", {command}, "}"];
 condition = and_condition, {or_operator, and_condition};
 and_condition = equal_condition, {and_operator, equal_condition};
 equal_condition = relation_condition, [equal_operator, relation_condition];
