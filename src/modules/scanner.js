@@ -1,5 +1,5 @@
 import { Token, tokenType, keyWords, specialChar } from './token.js';
-import { SyntaxError } from './error-handler.js';
+import { LexicalError } from './error-handler.js';
 import { Reader } from './reader.js';
 
 export class Scanner {
@@ -14,30 +14,27 @@ export class Scanner {
 
     getToken() {
         this._skipWhite();
-        if (this.currentChar === -1) return new Token(tokenType.EOF, this.lineNum, this.charNum);
+        if (this.currentChar === '~~') return new Token(tokenType.EOF, this.lineNum, this.charNum);
       
+        let lineNum = this.lineNum;
+        let charNum = this.charNum;
+
         let token = null;
-        token = this._processComment(this.lineNum, this.charNum)
+        token = this._processComment(lineNum, charNum)
         if(token) return token;
-        token = this._processIdentifierOrKeyWord(this.lineNum, this.charNum);
+        token = this._processIdentifierOrKeyWord(lineNum, charNum);
         if(token) return token;
-        token = this._processNumber(this.lineNum, this.charNum);
+        token = this._processNumber(lineNum, charNum);
         if(token) return token;
-        token = this._processSpecialChar(this.lineNum, this.charNum);
+        token = this._processSpecialChar(lineNum, charNum);
+        if(token) return token;
+        token = this._processStartingWithCapitalAlpha(lineNum, charNum);
         if(token) return token;
 
-        token = new Token(tokenType.UNKNOWN, tokenLineNum, tokenCharNum, {value: this.currentChar});
+
+        token = new Token(tokenType.UNKNOWN, lineNum, charNum, {value: this.currentChar});
         this._moveCursor();
         return token;
-    }
-
-    _processSpecialChar(lineNum, charNum) {
-        if(!specialChar.includes(this.currentChar)) return null;
-        
-        char = this.currentChar;
-        this._moveCursor()
-
-        return new Token(specialChar[char], tokenLineNum, tokenCharNum);
     }
 
     _processComment(lineNum, charNum){
@@ -47,29 +44,50 @@ export class Scanner {
         this._moveCursor();
 
         while(this.currentChar !== '#') { //TODO: throw lexical error mising '#'
-            if(this.currentChar === -1) return new Token(tokenType.UNKNOWN, tokenLineNum, tokenCharNum, {value: this.tokenValue});
+            if(this.currentChar === -1) throw new LexicalError('Missing ending # sign', lineNum, charNum);
             tokenValue += this.currentChar;
             this._moveCursor();
         }
 
         this._moveCursor()
-        return new Token(tokenType.COMMENT, tokenLineNum, tokenCharNum, {value: tokenValue});
+        return new Token(tokenType.COMMENT, lineNum, charNum, {value: tokenValue});
+    }
+
+    _processIdentifierOrKeyWord(lineNum, charNum) {
+        if(!isSmallAlpha(this.currentChar)) return null;
+
+        let maxIdentLen = 50;
+        let tokenValue = "";
+
+        while(isAlphaNum(this.currentChar) && maxIdentLen > 0) {
+            tokenValue += this.currentChar;
+            this._moveCursor();
+            maxIdentLen--;
+        }
+
+        //keyword
+        if (keyWords.hasOwnProperty(tokenValue)) return new Token(keyWords[tokenValue], lineNum, charNum);
+        
+        //identifier
+        return new Token(tokenType.IDENTIFIER, lineNum, charNum, {value: tokenValue});
     }
 
     _processNumber(lineNum, charNum) {
         if(!isDigit(this.currentChar)) return null;
         let numRead = 0;
+        let tokenValue = '';
 
         if(is0(this.currentChar)) {
             tokenValue += this.currentChar;
             this._moveCursor();
-            read++;
-        }
+            numRead++;
 
             if(isAlphaNum(this.currentChar)) {
                 this._backCursor(numRead);
                 return null;
             }
+        }
+
         
         while(isDigit(this.currentChar)) {
             tokenValue += this.currentChar;
@@ -105,26 +123,27 @@ export class Scanner {
             } 
 
         tokenValue = Number(tokenValue);
-        return (isInt(tokenValue) ? new Token(tokenType.INT, tokenLineNum, tokenCharNum, { value: tokenValue }) : new Token(tokenType.FLOAT, tokenLineNum, tokenCharNum, { value: tokenValue }));
+        return (isInt(tokenValue) ? new Token(tokenType.INT, lineNum, charNum, { value: tokenValue }) : new Token(tokenType.FLOAT, lineNum, charNum, { value: tokenValue }));
     }
 
-    _processIdentifierOrKeyWord(lineNum, charNum) {
-        if(!isSmallAlpha(this.currentChar)) return null;
+    _processSpecialChar(lineNum, charNum) {
+        if(!specialChar.hasOwnProperty(this.currentChar)) return null;
+        
+        let char = this.currentChar;
+        this._moveCursor()
 
-        let maxIdentLen = 50;
-        let tokenValue = "";
+        return new Token(specialChar[char], lineNum, charNum);
+    }
 
-        while(isAlphaNum(this.currentChar) && maxIdentLen > 0) {
+    _processStartingWithCapitalAlpha(lineNum, charNum) {
+        if(!isCapitalAlpha(this.currentChar)) return null;
+        let tokenValue = '';
+        while(isAlphaNum(this.currentChar)) {
             tokenValue += this.currentChar;
-            this._moveCursor();
-            maxIdentLen--;
+            this._moveCursor()
         }
 
-        //keyword
-        if (keyWords.includes(tokenValue)) return new Token(keyWords[tokenValue], tokenLineNum, tokenCharNum);
-        
-        //identifier
-        return new Token(tokenType.IDENTIFIER, tokenLineNum, tokenCharNum, {value: tokenValue});
+        return new Token(tokenType.UNKNOWN, lineNum, charNum, {value: tokenValue});
     }
 
     _skipWhite() {
@@ -143,18 +162,19 @@ export class Scanner {
         }
     }
 
-    _backCursor() {
-        this.currentChar = this.reader.prevChar();
-        this.charNum--;      
+    _backCursor(n) {
+        this.currentChar = this.reader.prevChar(n);
+        this.charNum -= n;      
     }
 }
 
 function isSmallAlpha(c) {  return c.match(/[a-z]/)                         }
+function isCapitalAlpha(c) {return c.match(/[A-Z]/)                         }
 function isAlpha(c) {       return c.match(/[a-zA-Z]/)                      }
 function is0(c) {           return c === '0'                                }
 function is1_9(c) {         return c.match(/[1-9]/)                         }
 function isDigit(c) {       return (is1_9(c) ||  is0(c))                    }
-function isAlphaNum(c) {    return (isAlpha(c) || isDigit(c))              }
+function isAlphaNum(c) {    return (isAlpha(c) || isDigit(c))               }
 function isNewLine(c) {     return c === '\n'                               }
 function isWhite(c) {       return (c === '\n' || c === ' ' || c === '\t')  }
 function isInt(n) {         return n % 1 === 0                              }

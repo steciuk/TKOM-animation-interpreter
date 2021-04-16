@@ -4,6 +4,14 @@ export class FileReaderError extends Error {
     }
 }
 
+export class LexicalError extends Error {
+    constructor(message, lineNum, charNum) {
+        super(message);
+        this.lineNum = lineNum;
+        this.charNum = charNum;
+    }
+}
+
 export class SyntaxError extends Error {
     constructor(message, lineNum, charNum) {
         super(message);

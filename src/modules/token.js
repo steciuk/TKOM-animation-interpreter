@@ -1,4 +1,3 @@
-//TODO:: Default value of null
 export class Token {
     //optional parameter "value", undefined if not passed
     constructor(type, lineNum, charNum, { value } = {}) { 
@@ -39,7 +38,7 @@ export let tokenType = {
     PLUS : 'PLUS',
     RETURN : 'RETURN',
     SEMICOLON : 'SEMICOLON',
-    UNKOWN : 'UNKNOWN',    
+    UNKNOWN : 'UNKNOWN',    
 }
 
 //TODO: zamień na tokentypy
@@ -48,7 +47,7 @@ export let keyWords = {
     'for' : tokenType.FOR,
     'func' : tokenType.FUNC,
     'if' : tokenType.IF,
-    'return' : tokenType.RETURN,
+    'return' : tokenType.RETURN
 }
 
 export let specialChar = {    
@@ -66,5 +65,5 @@ export let specialChar = {
     '+' : tokenType.PLUS,
     '<' : tokenType.LESS,
     '=' : tokenType.EQUALS,
-    '>' : tokenType.GREATER,
+    '>' : tokenType.GREATER
 }

@@ -1,6 +1,5 @@
 import { FileReaderError } from './modules/error-handler.js';
 import { Scanner } from './modules/scanner.js'
-import { Reader } from './modules/reader.js'
 
 //TODO: clean up positions according to html
 const startBtnEl = document.getElementById('start');
@@ -36,7 +35,6 @@ function getFile(e) {
 
 function interpret() {
     if (code === '') return;
-    let reader =  new Reader(code);
     let scanner = new Scanner(code);
 
     let token = undefined;
