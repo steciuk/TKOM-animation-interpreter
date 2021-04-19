@@ -35,7 +35,7 @@ function getFile(e) {
 
 function interpret() {
     if (code === '') return;
-    let scanner = new Scanner(code);
+    let scanner = new Scanner(code, 50);
 
     let token = undefined;
     do {

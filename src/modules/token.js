@@ -41,7 +41,7 @@ export let tokenType = {
     UNKNOWN : 'UNKNOWN',    
 }
 
-//TODO: zamień na tokentypy
+
 export let keyWords = {
     'else' : tokenType.ELSE,
     'for' : tokenType.FOR,

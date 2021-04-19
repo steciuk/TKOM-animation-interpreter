@@ -3,9 +3,10 @@ import { LexicalError } from './error-handler.js';
 import { Reader } from './reader.js';
 
 export class Scanner {
-    constructor(code) {
+    constructor(code, maxIdentLen) {
         this.reader = new Reader(code)
 
+        this.maxIdentLen = maxIdentLen;
         this.currentChar = this.reader.nextChar();
         this.lineNum = 1;
         this.charNum = 1;
@@ -43,7 +44,7 @@ export class Scanner {
         let tokenValue = "";
         this._moveCursor();
 
-        while(this.currentChar !== '#') { //TODO: throw lexical error mising '#'
+        while(this.currentChar !== '#') {
             if(this.currentChar === -1) throw new LexicalError('Missing ending # sign', lineNum, charNum);
             tokenValue += this.currentChar;
             this._moveCursor();
@@ -56,7 +57,7 @@ export class Scanner {
     _processIdentifierOrKeyWord(lineNum, charNum) {
         if(!isSmallAlpha(this.currentChar)) return null;
 
-        let maxIdentLen = 50;
+        let maxIdentLen = this.maxIdentLen;
         let tokenValue = "";
 
         while(isAlphaNum(this.currentChar) && maxIdentLen > 0) {
@@ -65,63 +66,89 @@ export class Scanner {
             maxIdentLen--;
         }
 
-        //keyword
+        // keyword
         if (keyWords.hasOwnProperty(tokenValue)) return new Token(keyWords[tokenValue], lineNum, charNum);
         
-        //identifier
+        // identifier
         return new Token(tokenType.IDENTIFIER, lineNum, charNum, {value: tokenValue});
     }
 
     _processNumber(lineNum, charNum) {
         if(!isDigit(this.currentChar)) return null;
-        let numRead = 0;
         let tokenValue = '';
 
+        // 0
         if(is0(this.currentChar)) {
             tokenValue += this.currentChar;
             this._moveCursor();
-            numRead++;
 
+            // invalid: 0 alphanum
             if(isAlphaNum(this.currentChar)) {
-                this._backCursor(numRead);
-                return null;
+                tokenValue += this.currentChar;
+                this._moveCursor();
+
+                // 0 alphaNum alphaNumOrDot+
+                while(isAlphaNumOrDot(this.currentChar)) {
+                    tokenValue += this.currentChar;
+                    this._moveCursor();
+                }
+
+                return new Token(tokenType.UNKNOWN, lineNum, charNum, {value: tokenValue});                
+            } 
+        }
+        // NumNonZero
+        else {
+            tokenValue += this.currentChar;
+            this._moveCursor();
+
+            // NumNonZero digit+
+            while(isDigit(this.currentChar)) {
+                tokenValue += this.currentChar;
+                this._moveCursor();
             }
+
+            // invalid: NumNonZero digit* alpha
+            if(isAlpha(this.currentChar)) {
+                tokenValue += this.currentChar;
+                this._moveCursor();
+
+                // NumNonZero digit* alpha alphaNumOrDot+
+                while(isAlphaNumOrDot(this.currentChar)) {
+                    tokenValue += this.currentChar;
+                    this._moveCursor();
+                }
+
+                return new Token(tokenType.UNKNOWN, lineNum, charNum, {value: tokenValue});
+            }
+        }
+
+        // Int .
+        if(isDot(this.currentChar)) {
+            tokenValue += this.currentChar;
+            this._moveCursor();
+
+            // Int . digit+ 
+            while(isDigit(this.currentChar)) {
+                tokenValue += this.currentChar;
+                this._moveCursor();
+            }
+
+            // invalid: Int . digit* alphaOrDot
+            if(isAlphaOrDot(this.currentChar)) {
+                tokenValue += this.currentChar;
+                this._moveCursor();
+
+                // Int . digit* alphaOrDot alphaNumOrDot+
+                while(isAlphaNumOrDot(this.currentChar)) {
+                    tokenValue += this.currentChar;
+                    this._moveCursor();
+                }
+
+                return new Token(tokenType.UNKNOWN, lineNum, charNum, {value: tokenValue});
+            }               
         }
 
         
-        while(isDigit(this.currentChar)) {
-            tokenValue += this.currentChar;
-            this._moveCursor()
-            numRead++;
-        }
-
-            if(isAlpha(this.currentChar)) {
-                this._backCursor(numRead);
-                return null;
-            }
-
-        if(this.currentChar === '.') {
-            tokenValue += '.'
-            this._moveCursor()
-            numRead++;
-        }
-
-            if(isAlpha(this.currentChar)) {
-                this._backCursor(numRead);
-                return null;
-            }
-
-        while(isDigit(this.currentChar)) {
-            tokenValue += this.currentChar;
-            this._moveCursor()
-            numRead++;
-        }
-
-            if(isAlpha(this.currentChar)) {
-                this._backCursor(numRead);
-                return null;
-            } 
-
         tokenValue = Number(tokenValue);
         return (isInt(tokenValue) ? new Token(tokenType.INT, lineNum, charNum, { value: tokenValue }) : new Token(tokenType.FLOAT, lineNum, charNum, { value: tokenValue }));
     }
@@ -162,19 +189,26 @@ export class Scanner {
         }
     }
 
-    _backCursor(n) {
-        this.currentChar = this.reader.prevChar(n);
-        this.charNum -= n;      
-    }
+    // _backCursor(n) {
+    //     this.currentChar = this.reader.prevChar(n);
+    //     this.charNum -= n;      
+    // }
 }
 
 function isSmallAlpha(c) {  return c.match(/[a-z]/)                         }
 function isCapitalAlpha(c) {return c.match(/[A-Z]/)                         }
 function isAlpha(c) {       return c.match(/[a-zA-Z]/)                      }
+function isDot(c) {         return c === '.'                                }
+function isAlphaOrDot(c) {  return (isAlpha(c) || isDot(c))                 }
+
 function is0(c) {           return c === '0'                                }
 function is1_9(c) {         return c.match(/[1-9]/)                         }
 function isDigit(c) {       return (is1_9(c) ||  is0(c))                    }
+function isDigitOrDot(c) {  return (isDigit(c) || isDot(c))                 }
+
 function isAlphaNum(c) {    return (isAlpha(c) || isDigit(c))               }
+function isAlphaNumOrDot(c) {return (isAlphaNum(c) || isDot(c))}
+
 function isNewLine(c) {     return c === '\n'                               }
 function isWhite(c) {       return (c === '\n' || c === ' ' || c === '\t')  }
 function isInt(n) {         return n % 1 === 0                              }
