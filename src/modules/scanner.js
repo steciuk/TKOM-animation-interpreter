@@ -188,11 +188,6 @@ export class Scanner {
             this.charNum++;
         }
     }
-
-    // _backCursor(n) {
-    //     this.currentChar = this.reader.prevChar(n);
-    //     this.charNum -= n;      
-    // }
 }
 
 function isSmallAlpha(c) {  return c.match(/[a-z]/)                         }

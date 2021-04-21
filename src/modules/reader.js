@@ -18,10 +18,4 @@ export class Reader {
         this.pos++;
         return char;
     }
-
-    // prevChar(n) {
-    //     if(this.pos - n < 0) throw new FileReaderError("Buffer index < 0")
-    //     this.pos -= n;
-    //     return this.code[this.pos];
-    // }
 }

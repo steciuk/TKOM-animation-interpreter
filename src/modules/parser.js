@@ -1,5 +1,4 @@
-/* Wyodrębnia znaki i grupuje je w atomy leksykalne -
-tokeny (słowa kluczowe, identyfikatory, operatory) 
+/*
 
 sprawdza, czy tokeny pojawiające się na
 wejściu tworzą poprawne konstrukcje

@@ -1,7 +1,6 @@
 import { FileReaderError } from './modules/error-handler.js';
 import { Scanner } from './modules/scanner.js'
 
-//TODO: clean up positions according to html
 const startBtnEl = document.getElementById('start');
 const inputEl = document.getElementById('input');
 const contentEl = document.getElementById('content');
@@ -41,9 +40,9 @@ function interpret() {
     do {
         token = scanner.getToken();
         console.log(token);
-        //let tokenEL = document.createElement('pre');
-        //tokenEL.innerHTML = token.toString();
-        //tokensDiv.appendChild(tokenEL);
+        let tokenEL = document.createElement('pre');
+        tokenEL.innerHTML = token.toString();
+        tokensDiv.appendChild(tokenEL);
     } while(token.type !== 'EOF')
 
     
