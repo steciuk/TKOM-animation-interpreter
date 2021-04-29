@@ -185,8 +185,8 @@ command = (expression, ";") | for | if;
 func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {expression, ";"}, "return", [id], ";", "}";
 expression = assigment | func_call | transformation;
 assigment = var_or_attribute, "=", arith_expression;
-func_call = (id, "(", [args], ")") | "(", args, ")"";
-args = (var_or_attribute | number), {",", (var_or_attribute | number)}
+func_call = id, "(", args, ")";
+args = [(var_or_attribute | number), {",", (var_or_attribute | number)}];
 transformation = func_call, {"*", func_call}, "*", id;
 
 arith_expression = add_expression, {add_operator, add_expression};

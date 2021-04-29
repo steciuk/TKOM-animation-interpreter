@@ -34,3 +34,26 @@ export class UnaryOp extends AstNode {
         this.op = token.type
     }
 }
+
+export class Identifier extends AstNode {
+    constructor(token) {
+        super(token)
+        this.name = token.value
+    }
+}
+
+export class FuncCall extends AstNode {
+    constructor(token, args) {
+        super(token)
+        this.name = token.value
+        this.args = args
+    }
+}
+
+export class VarOrAttribute extends AstNode {
+    constructor(token, attribute) {
+        super(token)
+        this.name = token.value
+        this.attribute = attribute
+    }
+}
