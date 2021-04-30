@@ -1,5 +1,6 @@
 import { FileReaderError } from './modules/error-handler.js'
 import { Scanner } from './modules/scanner.js'
+import { Parser } from './modules/parser.js'
 
 const startBtnEl = document.getElementById('start')
 const inputEl = document.getElementById('input')
@@ -34,16 +35,17 @@ function getFile(e) {
 
 function interpret() {
     if (code === '') return
-    let scanner = new Scanner(code, 50)
+    let parser = new Parser(code, 50)
+    console.log(parser.parse())
 
-    let token = undefined
-    do {
-        token = scanner.getToken()
-        console.log(token)
-        let tokenEL = document.createElement('pre')
-        tokenEL.innerHTML = token.toString()
-        tokensDiv.appendChild(tokenEL)
-    } while(token.type !== 'EOF')
+    // let token = undefined
+    // do {
+    //     token = scanner.getToken()
+    //     console.log(token)
+    //     let tokenEL = document.createElement('pre')
+    //     tokenEL.innerHTML = token.toString()
+    //     tokensDiv.appendChild(tokenEL)
+    // } while(token.type !== 'EOF')
 
     
 

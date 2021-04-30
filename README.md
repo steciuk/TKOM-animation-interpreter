@@ -1,5 +1,6 @@
 
 
+
 # Interpreter języka do budowania dwuwymiarowych scen graficznych
 *Autor: Adam Steciuk (300263)*
 *kwiecień 2021*
@@ -178,10 +179,10 @@ for(0){
 ### Gramatyka:
 Między składowymi poniższych konstrukcji może być dowolna liczba białych znaków.
 ```
-program = {(command, ";") | comment | func_definition};
+program = {command | func_definition};
 comment = "#", { "0x00".."0xFF" - "#" }, "#";
 
-command = (expression, ";") | for | if;
+command = ((expression, | for | if ), ";") | comment;
 func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {expression, ";"}, "return", [id], ";", "}";
 expression = assigment | func_call | transformation;
 assigment = var_or_attribute, "=", arith_expression;

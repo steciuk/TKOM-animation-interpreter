@@ -1,6 +1,6 @@
 class AstNode {
     constructor(token) {
-        this.token = token
+        //this.token = token
     }
 }
 
@@ -55,5 +55,12 @@ export class VarOrAttribute extends AstNode {
         super(token)
         this.name = token.value
         this.attribute = attribute
+    }
+}
+
+export class Comment extends AstNode {
+    constructor(token) {
+        super(token)
+        this.comment = token.value
     }
 }
