@@ -1,1 +1,4 @@
--dom(10.1, dupa.ee.u.oooo, yyy) * ouo.ii.exx * (-10 + 20) * 40
+func zroob(a, b, c, d) {
+    dom.jgjhj = 433 * 324 + 324 * uyuyu;
+    drzewo(aa.bb.cc, 357);
+};

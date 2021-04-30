@@ -35,10 +35,10 @@ export class UnaryOp extends AstNode {
     }
 }
 
-export class Identifier extends AstNode {
+export class Var extends AstNode {
     constructor(token) {
         super(token)
-        this.name = token.value
+        this.var = token.value
     }
 }
 
@@ -50,10 +50,10 @@ export class FuncCall extends AstNode {
     }
 }
 
-export class VarOrAttribute extends AstNode {
+export class VarAndAttribute extends AstNode {
     constructor(token, attribute) {
         super(token)
-        this.name = token.value
+        this.var = token.value
         this.attribute = attribute
     }
 }
@@ -62,5 +62,23 @@ export class Comment extends AstNode {
     constructor(token) {
         super(token)
         this.comment = token.value
+    }
+}
+
+export class Transformation extends AstNode {
+    constructor(token, trans) {
+        super(token)
+        this.trans = trans
+        this.shape = token.value
+    }
+}
+
+export class FuncDef extends AstNode {
+    constructor(token, params, commands, returnVal) {
+        super(token)
+        this.name = token.value
+        this.params = params
+        this.commands = commands
+        this.returnVal = returnVal
     }
 }

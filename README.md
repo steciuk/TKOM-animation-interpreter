@@ -183,12 +183,12 @@ program = {command | func_definition};
 comment = "#", { "0x00".."0xFF" - "#" }, "#";
 
 command = ((expression, | for | if ), ";") | comment;
-func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {expression, ";"}, "return", [id], ";", "}";
-expression = assigment | func_call | transformation;
+func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {command, ";"}, "return", [id], ";", "}";
+expression = assigment | func_callOrTransformation;
+func_callOrTransformationOrAssignment = func_call, [{"*", func_call}, "*", id]
 assigment = var_or_attribute, "=", arith_expression;
 func_call = id, "(", args, ")";
 args = [(var_or_attribute | number), {",", (var_or_attribute | number)}];
-transformation = func_call, {"*", func_call}, "*", id;
 
 arith_expression = add_expression, {add_operator, add_expression};
 add_expression = mult_expression, {mult_operator, mult_expression};
