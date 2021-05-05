@@ -74,7 +74,7 @@ export class Transformation extends AstNode {
 }
 
 export class FuncDef extends AstNode {
-    constructor(token, params, commands, returnVal) {
+    constructor(token, params, commands) {
         super(token)
         this.name = token.value
         this.params = params
@@ -87,5 +87,21 @@ export class ReturnStatement extends AstNode {
         super(token)
         this.name = token.value
         this.returnVal = returnVal
+    }
+}
+
+export class IfStatement extends AstNode {
+    constructor(token, condition, commands) {
+        super(token)
+        this.condition = condition
+        this.commands = commands
+    }
+}
+
+export class ForStatement extends AstNode {
+    constructor(token, numOfIterations, commands) {
+        super(token)
+        this.numOfIterations = numOfIterations
+        this.commands = commands
     }
 }

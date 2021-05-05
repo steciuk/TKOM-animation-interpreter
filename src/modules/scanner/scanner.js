@@ -1,5 +1,5 @@
-import { Token, tokenType, keyWords, specialChar } from './token.js'
-import { LexicalError } from './error-handler.js'
+import { Token, tokenType, keyWords, specialChar } from '../token.js'
+import { LexicalError } from '../error-handler.js'
 import { Reader } from './reader.js'
 
 export class Scanner {
@@ -159,8 +159,13 @@ export class Scanner {
         let char = this.currentChar
         this._moveCursor()
 
-        if(char === '')
-
+        if(char === '=' || char === '!' || char === '<' || char === '>') {
+            if(this.currentChar === '=') {
+                char += this.currentChar
+                this._moveCursor()
+            }
+        }
+     
         return new Token(specialChar[char], lineNum, charNum)
     }
 

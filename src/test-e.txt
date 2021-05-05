@@ -1,1 +1,14 @@
-and
+func eyy(aa, b, c) {
+    return a;
+};
+
+if(a == b and 4 != 4 or b.f.r >= fun(d)) {
+    inst();
+    if(b) {
+        rrrr = 3;
+    };
+};
+
+for(3 - 1) {
+    eyy(34);
+};

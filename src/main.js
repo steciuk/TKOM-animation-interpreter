@@ -1,6 +1,6 @@
 import { FileReaderError } from './modules/error-handler.js'
-import { Scanner } from './modules/scanner.js'
-import { Parser } from './modules/parser.js'
+import { Scanner } from './modules/scanner/scanner.js'
+import { Parser } from './modules/parser/parser.js'
 
 const startBtnEl = document.getElementById('start')
 const inputEl = document.getElementById('input')

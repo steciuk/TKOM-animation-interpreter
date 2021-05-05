@@ -1,7 +1,7 @@
-import { tokenType } from './token.js'
-import { SyntaxError } from './error-handler.js'
-import { Scanner } from './scanner.js'
-import { FuncDef, Var, BinaryOp, UnaryOp, Int, Float, FuncCall, VarAndAttribute, Comment, Transformation, ReturnStatement } from './ast-nodes.js'
+import { tokenType } from '../token.js'
+import { SyntaxError } from '../error-handler.js'
+import { Scanner } from '../scanner/scanner.js'
+import { ForStatement, FuncDef, Var, BinaryOp, UnaryOp, Int, Float, FuncCall, VarAndAttribute, Comment, Transformation, ReturnStatement, IfStatement } from './ast-nodes.js'
 import { Program } from './program.js'
 
 export class Parser {
@@ -52,7 +52,6 @@ export class Parser {
         }
 
         this._eat(tokenType.CURLYCLOSE)
-        this._eat(tokenType.SEMICOLON)
 
         return commands
     }
@@ -81,6 +80,7 @@ export class Parser {
 
         this._eat(tokenType.PARENTHCLOSE)       
         const commands = this._parseBlock()
+        this._eat(tokenType.SEMICOLON)
         return new FuncDef(name, params, commands)
     }
 
@@ -100,6 +100,18 @@ export class Parser {
         
         if(node !== null) this._eat(tokenType.SEMICOLON)
         return node
+    }
+
+    _parseFor() {
+        if(this.current_token.type !== tokenType.FOR) return null
+        const token = this.current_token
+        this._eat(tokenType.FOR)
+        this._eat(tokenType.PARENTHOPEN)
+        const numOfIterations = this._parseArithExpression()
+        if(!numOfIterations) this._throwSyntaxError([tokenType.MINUS, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+        this._eat(tokenType.PARENTHCLOSE)
+        const block = this._parseBlock()
+        return new ForStatement(token, numOfIterations, block)
     }
 
     _parseExpression() {
@@ -153,12 +165,14 @@ export class Parser {
  
     _parseIf() {
         if(this.current_token.type !== tokenType.IF) return null
+        const token = this.current_token
         this._eat(tokenType.IF)
         this._eat(tokenType.PARENTHOPEN)
-        const condition = this.parseCondition()
+        const condition = this._parseCondition()
         this._eat(tokenType.PARENTHCLOSE)
         const block = this._parseBlock()
 
+        return new IfStatement(token, condition, block)
     }
 
     _parseCondition() {
@@ -193,14 +207,67 @@ export class Parser {
         const left = this._parseRelationCondition()
         if(!left) return null
         const operator = this.current_token
-        while(operator.type === tokenType.ASSIGN || operator.type === tokenType.NOT) {
-            this._eat(tokenType.AND)
-            const right = this._parseAndCondition()
+        if(operator.type === tokenType.EQUALS || operator.type === tokenType.NOTEQUALS) {
+            this._eat()
+            const right = this._parseRelationCondition()
             if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
             return new BinaryOp(left, right, operator)
         }
 
         return left
+    }
+
+    _parseRelationCondition() {
+        const left = this._parseNegationCondition()
+        if(!left) return null
+        const operator = this.current_token
+        if(operator.type === tokenType.LESS || 
+            operator.type === tokenType.GREATER || 
+            operator.type === tokenType.LESSOREQUALS ||
+            operator.type === tokenType.GREATEROREQUALS) {
+            
+            this._eat()
+            const right = this._parseNegationCondition()
+            if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+            return new BinaryOp(left, right, operator)
+        }
+
+        return left
+    }
+
+    _parseNegationCondition() {
+        let token = this.current_token
+        if(token.type === tokenType.NOT) {
+            this._eat(tokenType.NOT)
+
+            const term = this._parseBaseCondition()
+            if(!right) this._throwSyntaxError([tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+           
+            return new UnaryOp(token, term)
+        }
+
+        return this._parseBaseCondition()
+    }
+
+    _parseBaseCondition() {
+        let token = this.current_token
+        if(token.type === tokenType.FLOAT) {
+            this._eat(tokenType.FLOAT)
+            return new Float(token)
+        }
+        if(token.type === tokenType.INT) {
+            this._eat(tokenType.INT)
+            return new Int(token)
+        }
+        if(token.type === tokenType.PARENTHOPEN){
+            this._eat(tokenType.PARENTHOPEN)
+            let node = this._parseCondition()
+            if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+            this._eat(tokenType.PARENTHCLOSE)
+            return node
+        }
+
+        return this._parseVarOrAttributeOrFunCall()  
     }
 
     _parseArithExpression() {

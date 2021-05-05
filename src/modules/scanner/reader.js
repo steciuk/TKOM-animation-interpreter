@@ -1,5 +1,3 @@
-import { FileReaderError } from './error-handler.js'
-
 export class Reader {
     constructor(code) {
         this.code = code
