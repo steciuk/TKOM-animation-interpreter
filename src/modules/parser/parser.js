@@ -170,9 +170,14 @@ export class Parser {
         this._eat(tokenType.PARENTHOPEN)
         const condition = this._parseCondition()
         this._eat(tokenType.PARENTHCLOSE)
-        const block = this._parseBlock()
+        const ifBlock = this._parseBlock()
 
-        return new IfStatement(token, condition, block)
+        let elseBlock = null
+        if(this.current_token.type === tokenType.ELSE) {
+            elseBlock = this._parseBlock()
+        }
+
+        return new IfStatement(token, condition, ifBlock, elseBlock)
     }
 
     _parseCondition() {

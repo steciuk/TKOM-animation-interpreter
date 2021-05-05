@@ -185,7 +185,7 @@ comment = "#", { "0x00".."0xFF" - "#" }, "#";
 command = ((expression, | for | if ), ";") | comment;
 func_definition = "func",  id, "(", [id, {",", id}], ")", "{", {command, ";"}, "return", [id], ";", "}";
 expression = assigment | func_callOrTransformation;
-func_callOrTransformationOrAssignment = func_call, [{"*", func_call}, "*", id]
+func_callOrTransformation = func_call, [{"*", func_call}, "*", id]
 assigment = var_or_attribute, "=", arith_expression;
 func_call = id, "(", args, ")";
 args = [(var_or_attribute | number), {",", (var_or_attribute | number)}];
@@ -196,13 +196,14 @@ mult_expression = ["-"], term;
 term = var_or_attribute | func_call | number | ("(", arith_expression, ")";
 var_or_attribute = id, {".", id};
 
-for = "for", "(", expression, ")", "{", {commmand}, "}";
+for = "for", "(", arith_expression, ")", "{", {commmand}, "}";
 if = "if", "(", condition, ")", "{", {command}, "}", ["else", "{", {command}, "}"];
 condition = and_condition, {or_operator, and_condition};
 and_condition = equal_condition, {and_operator, equal_condition};
 equal_condition = relation_condition, [equal_operator, relation_condition];
 relation_condition = base_condition, [relation_operator, base_condition];
-base_condition = [negation_operator], (("(", condition, ")") | number | var_or_attribute);
+negation_condition = [negation_operator], base_condition 
+base_condition = (("(", condition, ")") | number | var_or_attribute);
 ```
 Między składowymi poniższych konstrukcji nie może być białych znaków.
 ```

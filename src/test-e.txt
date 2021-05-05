@@ -1,4 +1,5 @@
 func eyy(aa, b, c) {
+    a = 34244 * -234 + 32 / (b + c);
     return a;
 };
 
