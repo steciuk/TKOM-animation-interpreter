@@ -1,7 +1,8 @@
 import { tokenType } from './token.js'
 import { SyntaxError } from './error-handler.js'
 import { Scanner } from './scanner.js'
-import { FuncDef, Var, BinaryOp, UnaryOp, Int, Float, FuncCall, VarAndAttribute, Comment, Transformation } from './ast-nodes.js'
+import { FuncDef, Var, BinaryOp, UnaryOp, Int, Float, FuncCall, VarAndAttribute, Comment, Transformation, ReturnStatement } from './ast-nodes.js'
+import { Program } from './program.js'
 
 export class Parser {
     constructor(code, maxIdentLen) {
@@ -9,27 +10,51 @@ export class Parser {
         this.current_token = this.scanner.getToken()
     }
 
-    //TODO: funkcjie do mapy
-    //parsuj dopóki się udaje a nie do EOF
-    //obiekt typu program liste instrukcji i mape funckji zdefiniowanych
     parse(){
+        let funMap = new Map()
         let instructions = []
-        while(this.current_token.type !== tokenType.EOF){
-            const instruction = this._parseProgram()
+
+        while(this.current_token.type !== tokenType.EOF) {
+            let instruction = null
+            instruction = this._parseFuncDef()
+            if(instruction) {
+                funMap.set(instruction.name, instruction)
+            }
+            else {
+                instruction = this._parseCommand()
+                if(instruction) instructions.push(instruction)
+            }
+
             if(!instruction) this._throwSyntaxError("KNOWN TOKEN") // TODO: ale jaki?
-            instructions.push(instruction)
         }
-        
-        return instructions
+
+        return new Program(instructions, funMap)
     }
 
-    //TODO: przenieś do funkcji wyżej
-    _parseProgram() {
-        let node = this._parseFuncDef()
-        if(node) return node
-        node = this._parseCommand()
+    _parseBlock() {
+        this._eat(tokenType.CURLYOPEN)
+        let commands = []
 
-        return node
+        while(this.current_token.type !== tokenType.CURLYCLOSE) {
+            let command = null
+            if(this.current_token.type === tokenType.RETURN) {
+                const token = this.current_token
+                this._eat(tokenType.RETURN)
+                const returnVal = this._parseVarOrAttribute()
+                command = new ReturnStatement(token, returnVal)
+                this._eat(tokenType.SEMICOLON)
+            }
+            else {
+                command = this._parseCommand()
+            }
+            if(!command) this._throwSyntaxError([tokenType.IF, tokenType.FOR, tokenType.IDENTIFIER, tokenType.COMMENT, tokenType.RETURN])
+            commands.push(command)
+        }
+
+        this._eat(tokenType.CURLYCLOSE)
+        this._eat(tokenType.SEMICOLON)
+
+        return commands
     }
 
     _parseFuncDef() {
@@ -40,35 +65,23 @@ export class Parser {
         this._eat(tokenType.IDENTIFIER)
         this._eat(tokenType.PARENTHOPEN)
 
-        let params = [] //TODO: popraw kolejność i do osobnej funkcji
-        do{
-            if(this.current_token.type === tokenType.COMMA) this._throwSyntaxError(tokenType.IDENTIFIER)
-            if(this.current_token.type === tokenType.IDENTIFIER) {
-                params.push(new Var(this.current_token))
+        let params = []
+
+        if(this.current_token.type === tokenType.IDENTIFIER) {
+            let arg = this.current_token
+            this._eat(tokenType.IDENTIFIER)
+            params.push(new Var(arg))
+
+            while(this.current_token.type === tokenType.COMMA && this._eat(tokenType.COMMA)) {
+                let arg = this.current_token
                 this._eat(tokenType.IDENTIFIER)
+                params.push(new Var(arg))      
             }
-            else if(this.current_token.type !== tokenType.PARENTHCLOSE) {
-                this._throwSyntaxError(tokenType.IDENTIFIER)
-            }       
-        }while(this.current_token.type === tokenType.COMMA && this._eat(tokenType.COMMA))
-
-        this._eat(tokenType.PARENTHCLOSE)
-        this._eat(tokenType.CURLYOPEN) //TODO: parseBlock
-        let commands = []
-
-        while(this.current_token.type !== tokenType.RETURN && this.current_token.type !== tokenType.CURLYCLOSE) {
-            let command = this._parseCommand()
-            if(!command) this._throwSyntaxError([tokenType.IF, tokenType.FOR, tokenType.IDENTIFIER, tokenType.COMMENT])
-            commands.push(command)
         }
 
-        this._eat(tokenType.RETURN)
-        let returnVal = null
-        returnVal = this._parseVarOrAttribute()
-        this._eat(tokenType.CURLYCLOSE)
-        this._eat(tokenType.SEMICOLON)
-
-        return new FuncDef(name, params, commands, returnVal)
+        this._eat(tokenType.PARENTHCLOSE)       
+        const commands = this._parseBlock()
+        return new FuncDef(name, params, commands)
     }
 
     _parseCommand() {
@@ -78,14 +91,12 @@ export class Parser {
         }
 
         let node = this._parseExpression()
-        //if(!node) {
-            //node = this._parseFor()
-            //if(!node) {
-                //node = this._parseIf()
-                //if(!node) return null
-            //}
-   
-        //} 
+        if(!node) {
+            node = this._parseFor()
+            if(!node) {
+                node = this._parseIf()
+            } 
+        } 
         
         if(node !== null) this._eat(tokenType.SEMICOLON)
         return node
@@ -117,16 +128,16 @@ export class Parser {
             return new Transformation(funcName, transformations)
         }
         // assignment
-        else if(this.current_token.type === tokenType.EQUALS || this.current_token.type === tokenType.DOT) {
+        else if(this.current_token.type === tokenType.ASSIGN || this.current_token.type === tokenType.DOT) {
             const left = this._parseVarOrAttribute(token)
             const operator = this.current_token
-            this._eat(tokenType.EQUALS)
+            this._eat(tokenType.ASSIGN)
             const right = this._parseArithExpression()
             if(!right) this._throwSyntaxError([tokenType.MINUS, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
             return new BinaryOp(left, right, operator)
         }
 
-        this._throwSyntaxError([tokenType.PARENTHOPEN, tokenType.DOT, tokenType.EQUALS])
+        this._throwSyntaxError([tokenType.PARENTHOPEN, tokenType.DOT, tokenType.ASSIGN])
     }
 
     _throwSyntaxError(expected) {
@@ -138,6 +149,58 @@ export class Parser {
             expected: ${message}, 
             got: ${this.current_token.type}`
         )
+    }
+ 
+    _parseIf() {
+        if(this.current_token.type !== tokenType.IF) return null
+        this._eat(tokenType.IF)
+        this._eat(tokenType.PARENTHOPEN)
+        const condition = this.parseCondition()
+        this._eat(tokenType.PARENTHCLOSE)
+        const block = this._parseBlock()
+
+    }
+
+    _parseCondition() {
+        const left = this._parseAndCondition()
+        if(!left) return null
+        const operator = this.current_token
+        while(operator.type === tokenType.OR) {
+            this._eat(tokenType.OR)
+            const right = this._parseCondition()
+            if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+            return new BinaryOp(left, right, operator)
+        }
+
+        return left
+    }
+
+    _parseAndCondition() {
+        const left = this._parseEqualCondition()
+        if(!left) return null
+        const operator = this.current_token
+        while(operator.type === tokenType.AND) {
+            this._eat(tokenType.AND)
+            const right = this._parseAndCondition()
+            if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+            return new BinaryOp(left, right, operator)
+        }
+
+        return left
+    }
+
+    _parseEqualCondition() {
+        const left = this._parseRelationCondition()
+        if(!left) return null
+        const operator = this.current_token
+        while(operator.type === tokenType.ASSIGN || operator.type === tokenType.NOT) {
+            this._eat(tokenType.AND)
+            const right = this._parseAndCondition()
+            if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
+            return new BinaryOp(left, right, operator)
+        }
+
+        return left
     }
 
     _parseArithExpression() {
@@ -232,10 +295,8 @@ export class Parser {
     _parseArgsAsArray() {
         let args = []
 
-
-        //TODO: popraw while
         do{
-            if(this.current_token.type === tokenType.COMMA) this._throwSyntaxError(tokenType.IDENTIFIER)
+            if(this.current_token.type === tokenType.COMMA) this._throwSyntaxError([tokenType.FLOAT, tokenType.INT, tokenType.IDENTIFIER])
             const arg = this._parseVarOrAttribute()
             if(arg) {
                 args.push(arg)

@@ -1,4 +1,1 @@
-func zroob(a, b, c, d) {
-    dom.jgjhj = 433 * 324 + 324 * uyuyu;
-    drzewo(aa.bb.cc, 357);
-};
+and

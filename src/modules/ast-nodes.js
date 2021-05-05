@@ -79,6 +79,13 @@ export class FuncDef extends AstNode {
         this.name = token.value
         this.params = params
         this.commands = commands
+    }
+}
+
+export class ReturnStatement extends AstNode {
+    constructor(token, returnVal) {
+        super(token)
+        this.name = token.value
         this.returnVal = returnVal
     }
 }

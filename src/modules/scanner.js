@@ -159,6 +159,8 @@ export class Scanner {
         let char = this.currentChar
         this._moveCursor()
 
+        if(char === '')
+
         return new Token(specialChar[char], lineNum, charNum)
     }
 

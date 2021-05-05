@@ -21,7 +21,7 @@ export let tokenType = {
     DOT : 'DOT',
     ELSE : 'ELSE',
     EOF : 'EOF',
-    EQUALS : 'EQUALS',
+    ASSIGN : 'ASSIGN',
     FLOAT : 'FLOAT',
     FOR : 'FOR',
     FUNC : 'FUNC',
@@ -38,16 +38,23 @@ export let tokenType = {
     PLUS : 'PLUS',
     RETURN : 'RETURN',
     SEMICOLON : 'SEMICOLON',
-    UNKNOWN : 'UNKNOWN',    
+    UNKNOWN : 'UNKNOWN',
+    AND : 'AND',
+    OR : 'OR',
+    EQUALS : 'EQUALS',
+    NOTEQUALS : 'NOTEQUALS',
+    LESSOREQUALS : 'LESSOREQUALS',
+    GREATEROREQUALS : 'GREATEROREQUALS'
 }
-
 
 export let keyWords = {
     'else' : tokenType.ELSE,
     'for' : tokenType.FOR,
     'func' : tokenType.FUNC,
     'if' : tokenType.IF,
-    'return' : tokenType.RETURN
+    'return' : tokenType.RETURN,
+    'and' : tokenType.AND,
+    'or' : tokenType.OR
 }
 
 export let specialChar = {    
@@ -64,6 +71,11 @@ export let specialChar = {
     '}' : tokenType.CURLYCLOSE,
     '+' : tokenType.PLUS,
     '<' : tokenType.LESS,
-    '=' : tokenType.EQUALS,
-    '>' : tokenType.GREATER
+    '=' : tokenType.ASSIGN,
+    '>' : tokenType.GREATER,
+    '==' : tokenType.EQUALS,
+    '!=' : tokenType.NOTEQUALS,
+    '<=' : tokenType.LESSOREQUALS,
+    '>=' : tokenType.GREATEROREQUALS,
+
 }
