@@ -6,7 +6,7 @@ func eyy(aa, b, c) {
 s = 1 * 2 / 3 * 4 / 5;
 
 if(a == b and 4 != 4 or b.f.r >= 3+3*2) {
-    inst();
+    inst() * a() * b() * shape;
     if(b) {
         rrrr = 3;
     };

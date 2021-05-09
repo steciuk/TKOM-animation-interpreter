@@ -15,7 +15,7 @@ export class Parser {
         let instructions = []
 
         let instruction = null
-        //fixed
+
         do {
             instruction = null
 
@@ -36,10 +36,9 @@ export class Parser {
 
 
     _parseFuncDef() {
-        if(this.current_token.type !== tokenType.FUNC) return null
-        this._eat(tokenType.FUNC)
-        if(this.current_token.type !== tokenType.IDENTIFIER) this._throwSyntaxError(tokenType.IDENTIFIER)
-        const name = this.current_token
+        if(!this._eatOnlyIfIs(tokenType.FUNC)) return null
+        
+        const name = this.current_token        
         this._eat(tokenType.IDENTIFIER)
         this._eat(tokenType.PARENTHOPEN)
 
@@ -50,7 +49,7 @@ export class Parser {
             this._eat(tokenType.IDENTIFIER)
             params.push(new Var(arg))
             
-            while(this.current_token.type === tokenType.COMMA && this._eat(tokenType.COMMA)) {
+            while(this._eatOnlyIfIs(tokenType.COMMA)) {
                 let arg = this.current_token
                 this._eat(tokenType.IDENTIFIER)
                 params.push(new Var(arg))      
@@ -72,7 +71,7 @@ export class Parser {
             command = null
             if(this.current_token.type === tokenType.RETURN) {
                 const token = this.current_token
-                this._eat(tokenType.RETURN) //TODO: parse return
+                this._eat(tokenType.RETURN)
                 const returnVal = this._parseVarOrAttribute()
                 command = new ReturnStatement(token, returnVal)
                 this._eat(tokenType.SEMICOLON)
@@ -89,10 +88,7 @@ export class Parser {
     }
 
     _parseCommand() {
-        if(this.current_token.type === tokenType.COMMENT) { 
-            this._eat(tokenType.COMMENT)
-            return new Comment(this.current_token) 
-        }
+        if(this._eatOnlyIfIs(tokenType.COMMENT)) return new Comment(this.current_token) 
 
         let node = this._parseExpression()
         if(!node) {
@@ -107,9 +103,9 @@ export class Parser {
     }
 
     _parseFor() {
-        if(this.current_token.type !== tokenType.FOR) return null
         const token = this.current_token
-        this._eat(tokenType.FOR)
+        if(!this._eatOnlyIfIs(tokenType.FOR)) return null  
+
         this._eat(tokenType.PARENTHOPEN)
         const numOfIterations = this._parseArithExpression()
         if(!numOfIterations) this._throwSyntaxError([tokenType.MINUS, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
@@ -119,19 +115,17 @@ export class Parser {
     }
  
     _parseIf() {
-        if(this.current_token.type !== tokenType.IF) return null
         const token = this.current_token
-        this._eat(tokenType.IF)
+        if(!this._eatOnlyIfIs(tokenType.IF)) return null  
+        
         this._eat(tokenType.PARENTHOPEN)
         const condition = this._parseCondition()
         this._eat(tokenType.PARENTHCLOSE)
         const ifBlock = this._parseBlock()
 
         let elseBlock = null
-        if(this.current_token.type === tokenType.ELSE) {
-            elseBlock = this._parseBlock()
-        }
-
+        if(this.current_token.type === tokenType.ELSE) elseBlock = this._parseBlock()
+        
         return new IfStatement(token, condition, ifBlock, elseBlock)
     }
 
@@ -140,8 +134,7 @@ export class Parser {
         let left = this._parseAndCondition()
         if(!left) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
         let operator = this.current_token
-        while(operator.type === tokenType.OR) {
-            this._eat(tokenType.OR)
+        while(this._eatOnlyIfIs(tokenType.OR)) {
             const right = this._parseAndCondition()
             if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
             left = new BinaryOp(left, right, operator)
@@ -155,8 +148,7 @@ export class Parser {
         let left = this._parseEqualCondition()
         if(!left) return null
         let operator = this.current_token
-        while(operator.type === tokenType.AND) {
-            this._eat(tokenType.AND)
+        while(this._eatOnlyIfIs(tokenType.AND)) {
             const right = this._parseEqualCondition()
             if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
             left = new BinaryOp(left, right, operator)
@@ -200,9 +192,7 @@ export class Parser {
 
     _parseNegationCondition() {
         let token = this.current_token
-        if(token.type === tokenType.NOT) {
-            this._eat(tokenType.NOT)
-
+        if(this._eatOnlyIfIs(tokenType.NOT)) {
             const term = this._parseBaseCondition()
             if(!right) this._throwSyntaxError([tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
            
@@ -215,8 +205,7 @@ export class Parser {
     _parseBaseCondition() {
         let token = this.current_token
 
-        if(token.type === tokenType.PARENTHOPEN){
-            this._eat(tokenType.PARENTHOPEN)
+        if(this._eatOnlyIfIs(tokenType.PARENTHOPEN)){
             let node = this._parseCondition()
             if(!right) this._throwSyntaxError([tokenType.NOT, tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
             this._eat(tokenType.PARENTHCLOSE)
@@ -227,9 +216,8 @@ export class Parser {
     }
 
     _parseExpression() {
-        if(this.current_token.type !== tokenType.IDENTIFIER) return null
         const token = this.current_token
-        this._eat(tokenType.IDENTIFIER)
+        if(!this._eatOnlyIfIs(tokenType.IDENTIFIER)) return null
 
         let node = this._parseFunCall(token)
         if(node) { // funCall or transformation
@@ -238,8 +226,7 @@ export class Parser {
             let transformations = []
             transformations.push(node)
             let funcName = null
-            while(this.current_token.type === tokenType.MULTIPLY) {
-                this._eat(tokenType.MULTIPLY)
+            while(this._eatOnlyIfIs(tokenType.MULTIPLY)) {
                 funcName = this.current_token
                 this._eat(tokenType.IDENTIFIER)
 
@@ -297,9 +284,7 @@ export class Parser {
 
     _parseMultExpression() {
         let token = this.current_token
-        if(token.type === tokenType.MINUS) {
-            this._eat(tokenType.MINUS)
-
+        if(this._eatOnlyIfIs(tokenType.MINUS)) {
             const term = this._parseTerm()
             if(!term) this._throwSyntaxError([tokenType.IDENTIFIER, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN])
            
@@ -311,16 +296,9 @@ export class Parser {
 
     _parseTerm() {
         let token = this.current_token
-        if(token.type === tokenType.FLOAT) {
-            this._eat(tokenType.FLOAT)
-            return new Float(token)
-        }
-        if(token.type === tokenType.INT) {
-            this._eat(tokenType.INT)
-            return new Int(token)
-        }
-        if(token.type === tokenType.PARENTHOPEN){
-            this._eat(tokenType.PARENTHOPEN)
+        if(this._eatOnlyIfIs(tokenType.FLOAT, token)) return new Float(token)
+        if(this._eatOnlyIfIs(tokenType.INT, token)) return new Int(token)
+        if(this._eatOnlyIfIs(tokenType.PARENTHOPEN, token)){
             let node = this._parseArithExpression()
             if(!node) this._throwSyntaxError([tokenType.MINUS, tokenType.FLOAT, tokenType.INT, tokenType.PARENTHOPEN, tokenType.IDENTIFIER])
             this._eat(tokenType.PARENTHCLOSE)
@@ -331,10 +309,8 @@ export class Parser {
     }
 
     _parseVarOrAttributeOrFunCall() {
-        if(this.current_token.type !== tokenType.IDENTIFIER) return null
-
-        let token = this.current_token
-        this._eat(tokenType.IDENTIFIER)
+        const token = this.current_token
+        if(!this._eatOnlyIfIs(tokenType.IDENTIFIER)) return null
 
         let node = this._parseFunCall(token)
         if(node) return node
@@ -344,13 +320,11 @@ export class Parser {
 
     _parseFunCall(firstToken = null) {
         if(!firstToken) {
-            if(this.current_token.type !== tokenType.IDENTIFIER) return null
             firstToken = this.current_token
-            this._eat(tokenType.IDENTIFIER)
+            if(!this._eatOnlyIfIs(tokenType.IDENTIFIER)) return null
+            this._eat(tokenType.PARENTHOPEN)
         }
-        else if(this.current_token.type !== tokenType.PARENTHOPEN) return null
-
-        this._eat(tokenType.PARENTHOPEN)
+        else if(!this._eatOnlyIfIs(tokenType.PARENTHOPEN)) return null
         const args = this._parseArgsAsArray()
         this._eat(tokenType.PARENTHCLOSE)
         return new FuncCall(firstToken, args)
@@ -362,36 +336,25 @@ export class Parser {
         do{
             if(this.current_token.type === tokenType.COMMA) this._throwSyntaxError([tokenType.FLOAT, tokenType.INT, tokenType.IDENTIFIER])
             const arg = this._parseVarOrAttribute()
-            if(arg) {
-                args.push(arg)
-            }
-            else if(this.current_token.type === tokenType.FLOAT) {
-                args.push(new Float(this.current_token))
-                this._eat(tokenType.FLOAT)
-            }
-            else if(this.current_token.type === tokenType.INT) {
-                args.push(new Int(this.current_token))
-                this._eat(tokenType.INT)
-            }
-            else if(this.current_token.type !== tokenType.PARENTHCLOSE) {
-                this._throwSyntaxError([tokenType.FLOAT, tokenType.INT, tokenType.IDENTIFIER])
-            }       
-        }while(this.current_token.type === tokenType.COMMA && this._eat(tokenType.COMMA))
+            const token = this.current_token
+            if(arg) args.push(arg)
+            else if(this._eatOnlyIfIs(tokenType.FLOAT)) args.push(new Float(token))        
+            else if(this._eatOnlyIfIs(tokenType.INT)) args.push(new Int(token))
+            else if(this.current_token.type !== tokenType.PARENTHCLOSE) this._throwSyntaxError([tokenType.FLOAT, tokenType.INT, tokenType.IDENTIFIER])      
+        }while(this._eatOnlyIfIs(tokenType.COMMA))
 
         return args
     }
 
     _parseVarOrAttribute(firstToken = null) {
         if(!firstToken) {
-            if(this.current_token.type !== tokenType.IDENTIFIER) return null
             firstToken = this.current_token
-            this._eat(tokenType.IDENTIFIER)
+            if(!this._eatOnlyIfIs(tokenType.IDENTIFIER)) return null
         }
         
         if(this.current_token.type === tokenType.DOT) {
             let attributes = []
-            while(this.current_token.type === tokenType.DOT) {
-                this._eat(tokenType.DOT)
+            while(this._eatOnlyIfIs(tokenType.DOT)) {
                 const token = this.current_token
                 this._eat(tokenType.IDENTIFIER)
                 attributes.push(token.value)           
@@ -420,8 +383,9 @@ export class Parser {
         }
     }
 
-    _isCorrectAndEatIf(expected) {
-        if(this.current_token.type === expected) {
+    _eatOnlyIfIs(expected, token = null) {
+        if(!token) token = this.current_token
+        if(token.type === expected) {
             this._eat()
             return true
         }
