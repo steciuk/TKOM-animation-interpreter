@@ -193,7 +193,7 @@ args = [(var_or_attribute | number), {",", (var_or_attribute | number)}];
 arith_expression = add_expression, {add_operator, add_expression};
 add_expression = mult_expression, {mult_operator, mult_expression};
 mult_expression = ["-"], term;
-term = var_or_attribute | func_call | number | ("(", arith_expression, ")";
+term = var_or_attribute | func_call | number | ("(", arith_expression, ")");
 var_or_attribute = id, {".", id};
 
 for = "for", "(", arith_expression, ")", "{", {commmand}, "}";
@@ -203,7 +203,7 @@ and_condition = equal_condition, {and_operator, equal_condition};
 equal_condition = relation_condition, [equal_operator, relation_condition];
 relation_condition = base_condition, [relation_operator, base_condition];
 negation_condition = [negation_operator], base_condition 
-base_condition = (("(", condition, ")") | number | var_or_attribute);
+base_condition = ("(", condition, ")") | arith_expression;
 ```
 Między składowymi poniższych konstrukcji nie może być białych znaków.
 ```

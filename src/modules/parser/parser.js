@@ -13,12 +13,10 @@ export class Parser {
     parse(){
         let funMap = new Map()
         let instructions = []
-
         let instruction = null
 
         do {
             instruction = null
-
             instruction = this._parseFuncDef()
             if(instruction) {
                 funMap.set(instruction.name, instruction)
@@ -30,7 +28,6 @@ export class Parser {
         }while(instruction)
 
         if(this.current_token.type !== tokenType.EOF) this._throwSyntaxError("KNOWN TOKEN") // TODO: ale jaki?
-
         return new Program(instructions, funMap)
     }
 
@@ -65,8 +62,8 @@ export class Parser {
     _parseBlock() {
         this._eat(tokenType.CURLYOPEN)
         let commands = []
-
         let command = null
+
         do {
             command = null
             if(this.current_token.type === tokenType.RETURN) {
