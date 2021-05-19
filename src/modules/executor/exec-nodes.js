@@ -6,7 +6,7 @@ export class Variable {
 
 export class Numeric {
     constructor(value) {
-        super(value);
+        //super(value);
     }
 }
 

@@ -12,11 +12,12 @@ export class Executor {
 
     execute() {
         let mainScope = new Scope(null);
-        this._executeAssignment(mainScope);
 
-        // while (this._nextInst()) {
-        //     if (this.executeAssignmenet(mainScope)) continue;
-        // }
+        while (this._nextInst()) {
+            if (this._executeAssignment(mainScope)) continue;
+        }
+
+        console.log(mainScope);
     }
 
     _nextInst() {
@@ -30,18 +31,13 @@ export class Executor {
     }
 
     _executeAssignment(scope) {
-        if (!isObjOfClass(this.currentInst, astNodes.Assignment)) return false;
+        if (!isObjOfClass(this.currentInst, astNodes.Assignment)) return null;
 
         let value = this._evaluateValue(scope, this.currentInst.right);
-        //TODO: types
-
-        let variable = searchInScope(scope, this.currentInst.left.name);
-
-        console.log(variable);
+        scope.vars.set(this.currentInst.left.sym, value);
     }
 
     _evaluateValue(scope, node) {
-        console.log(node);
         if (isObjOfClass(node, astNodes.Int)) return node.value;
         if (isObjOfClass(node, astNodes.Float)) return node.value;
         if (isObjOfClass(node, astNodes.UnaryOp)) {
@@ -50,12 +46,16 @@ export class Executor {
             return -r;
         }
         if (isObjOfClass(node, astNodes.Var)) {
-            const variable = searchInScope(scope);
+            const variable = searchInScope(scope, node.sym);
             if (!variable) throwUndefinedError(node);
 
             return variable;
         }
-        //if (isObjOfClass(node, astNodes.VarAndAttribute)) TODO:
+        if (isObjOfClass(node, astNodes.VarAndAttribute)) {
+            const variable = this._getAttribute(scope, node);
+            if (!variable) throwUndefinedError(node);
+            return variable;
+        }
         if (isObjOfClass(node, astNodes.FuncCall))
             return this._evaluateFunction(node);
         if (isObjOfClass(node, astNodes.BinaryOp))
@@ -65,7 +65,7 @@ export class Executor {
     _evaluateBinary(scope, node) {
         const l = this._evaluateValue(scope, node.left);
         if (isNaN(l)) throwOperatorError(node.left);
-        const r = this._this._evaluateValue(scope, node.right);
+        const r = this._evaluateValue(scope, node.right);
         if (isNaN(r)) throwOperatorError(node.right);
 
         if (node.op === tokenType.MULTIPLY) return r * l;
@@ -85,28 +85,38 @@ export class Executor {
             if (typeof result === 'undefined') throwNoReturnError(node);
             return result;
         }
-        func = this.program.libFunMap.get(node.sym);
-        if (func) {
-            const result = func(node.args);
-            if (typeof result === 'undefined') throwNoReturnError(node);
-            return result;
+        if (this.program.libFunMap) {
+            func = this.program.libFunMap.get(node.sym);
+            if (func) {
+                const result = func(node.args);
+                if (typeof result === 'undefined') throwNoReturnError(node);
+                return result;
+            }
         }
 
         throwUndefinedError(node);
     }
 
     _getAttribute(scope, node) {
-        const variable = searchInScope(node.sym);
+        const variable = searchInScope(scope, node.sym);
         if (!variable) return null;
 
         const attributes = node.attribute;
         for (attr of attributes) {
-            const attribute = variable[attr];
+            const tempAttr = variable[attr];
+            if (typeof tempAttr === 'undefined')
+                throwNoAttributeError(node, variable, attr);
+
+            variable = tempAttr;
         }
+
+        return variable;
     }
 
-    _executeUserFunction(func) {
+    _executeUserFunction(func, args) {
         //TODO:
+        console.log(func);
+        console.log(args);
     }
 }
 
@@ -122,8 +132,7 @@ function searchInScope(scope, sym) {
     let variable = scope.vars.get(sym);
     if (variable) return variable;
 
-    while (scope.parentScope !== null);
-    {
+    while (scope.parentScope !== null) {
         scope = scope.parentScope;
         variable = scope.vars.get(sym);
         if (variable) return variable;
@@ -135,6 +144,12 @@ function searchInScope(scope, sym) {
 function throwUndefinedError(node) {
     throw new ExecutorError(
         `${node.token.lineNum} : ${node.token.charNum} : Undefined reference: ${node.sym}`
+    );
+}
+
+function throwNoAttributeError(node, variable, attribute) {
+    throw new ExecutorError(
+        `${node.token.lineNum} : ${node.token.charNum} : Object of type ${variable.constructor.name} doesn't have property ${attribute}`
     );
 }
 

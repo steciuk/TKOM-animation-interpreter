@@ -34,7 +34,7 @@ export class Parser {
             instruction = null;
             instruction = this._parseFuncDef();
             if (instruction) {
-                funMap.set(instruction.name, instruction);
+                funMap.set(instruction.sym, instruction);
             } else {
                 instruction = this._parseCommand();
                 if (instruction) instructions.push(instruction);

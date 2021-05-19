@@ -42,8 +42,8 @@ function interpret() {
     let parser = new Parser(code, 50);
     let program = parser.parse();
     console.log(program);
-    // let executor = new Executor(program);
-    // console.log(executor.execute());
+    let executor = new Executor(program);
+    console.log(executor.execute());
 
     // let token = undefined
     // do {
