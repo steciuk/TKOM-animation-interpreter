@@ -1,6 +1,7 @@
 import { FileReaderError } from './modules/error-handler.js';
 import { Parser } from './modules/parser/parser.js';
 import { Executor } from './modules/executor/executor.js';
+import { stdLib } from './modules/std-lib/objects.js';
 
 const startBtnEl = document.getElementById('start');
 const inputEl = document.getElementById('input');
@@ -41,6 +42,7 @@ function interpret() {
     if (code === '') return;
     let parser = new Parser(code, 50);
     let program = parser.parse();
+    program.setLibFunMap(stdLib);
     console.log(program);
     let executor = new Executor(program);
     console.log(executor.execute());

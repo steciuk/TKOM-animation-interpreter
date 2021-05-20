@@ -34,7 +34,18 @@ export class Executor {
         if (!isObjOfClass(this.currentInst, astNodes.Assignment)) return null;
 
         let value = this._evaluateValue(scope, this.currentInst.right);
-        scope.vars.set(this.currentInst.left.sym, value);
+        //TODO: check if undefined
+
+        let variable = null;
+        if (isObjOfClass(this.currentInst.left, astNodes.VarAndAttribute)) {
+            const [obj, variable] = [
+                ...this._getAttribute(scope, this.currentInst.left),
+            ];
+            variable.call(obj, value);
+        } else {
+            let variable = searchInScope(scope, this.currentInst.left.sym);
+            scope.vars.set(this.currentInst.left.sym, value);
+        }
     }
 
     _evaluateValue(scope, node) {
@@ -52,12 +63,11 @@ export class Executor {
             return variable;
         }
         if (isObjOfClass(node, astNodes.VarAndAttribute)) {
-            const variable = this._getAttribute(scope, node);
-            if (!variable) throwUndefinedError(node);
-            return variable;
+            const [obj, variable] = [...this._getAttribute(scope, node)];
+            return variable.call(obj, 'get');
         }
         if (isObjOfClass(node, astNodes.FuncCall))
-            return this._evaluateFunction(node);
+            return this._evaluateFunction(scope, node);
         if (isObjOfClass(node, astNodes.BinaryOp))
             return this._evaluateBinary(scope, node);
     }
@@ -77,18 +87,22 @@ export class Executor {
         if (node.op === tokenType.MINUS) return l - r;
     }
 
-    // user can override lib function
-    _evaluateFunction(node) {
-        let func = this.program.funMap.get(node.sym);
+    _evaluateFunction(scope, node) {
+        let func = this.program.funMap[node.sym];
         if (func) {
             const result = this._executeUserFunction(func, node.args);
             if (typeof result === 'undefined') throwNoReturnError(node);
             return result;
         }
         if (this.program.libFunMap) {
-            func = this.program.libFunMap.get(node.sym);
+            func = this.program.libFunMap[node.sym];
             if (func) {
-                const result = func(node.args);
+                let result;
+                // try {
+                result = func(this._evaluateArgs(scope, node.args));
+                // } catch (error) {
+                //     throwStdLibError(node, error.message);
+                // }
                 if (typeof result === 'undefined') throwNoReturnError(node);
                 return result;
             }
@@ -97,20 +111,30 @@ export class Executor {
         throwUndefinedError(node);
     }
 
-    _getAttribute(scope, node) {
-        const variable = searchInScope(scope, node.sym);
-        if (!variable) return null;
+    _evaluateArgs(scope, args) {
+        let evaluatedArgs = [];
+        for (const arg of args)
+            evaluatedArgs.push(this._evaluateValue(scope, arg));
+        return evaluatedArgs;
+    }
 
+    _getAttribute(scope, node) {
+        let variable = searchInScope(scope, node.sym);
+        if (!variable) throwUndefinedError(node);
+
+        let obj;
+        let func;
         const attributes = node.attribute;
-        for (attr of attributes) {
-            const tempAttr = variable[attr];
-            if (typeof tempAttr === 'undefined')
+        for (const attr of attributes) {
+            func = variable[attr];
+            if (typeof func === 'undefined')
                 throwNoAttributeError(node, variable, attr);
 
-            variable = tempAttr;
+            obj = variable;
+            variable = func.call(variable, 'get');
         }
 
-        return variable;
+        return [obj, func];
     }
 
     _executeUserFunction(func, args) {
@@ -168,6 +192,12 @@ function throwNoReturnError(node) {
 function throwOperatorError(node) {
     throw new ExecutorError(
         `${node.token.lineNum} : ${node.token.charNum} : Can't use arith operator on non-numeric value!`
+    );
+}
+
+function throwStdLibError(node, message) {
+    throw new ExecutorError(
+        `${node.token.lineNum} : ${node.token.charNum} : ${message}`
     );
 }
 

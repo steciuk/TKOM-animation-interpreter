@@ -5,7 +5,7 @@ export class FileReaderError extends Error {
 }
 
 export class LexicalError extends Error {
-    constructor(message, lineNum, charNum) {
+    constructor(message) {
         super(message);
         this.lineNum = lineNum;
         this.charNum = charNum;
@@ -13,33 +13,25 @@ export class LexicalError extends Error {
 }
 
 export class SyntaxError extends Error {
-    constructor(message, lineNum, charNum) {
+    constructor(message) {
         super(message);
-        this.lineNum = lineNum;
-        this.charNum = charNum;
     }
 }
 
 export class ParseError extends Error {
-    constructor(message, lineNum, charNum) {
+    constructor(message) {
         super(message);
-        this.lineNum = lineNum;
-        this.charNum = charNum;
     }
 }
 
 export class SemanticError extends Error {
-    constructor(message, lineNum, charNum) {
+    constructor(message) {
         super(message);
-        this.lineNum = lineNum;
-        this.charNum = charNum;
     }
 }
 
 export class ExecutorError extends Error {
-    constructor(message, lineNum, charNum) {
+    constructor(message) {
         super(message);
-        this.lineNum = lineNum;
-        this.charNum = charNum;
     }
 }

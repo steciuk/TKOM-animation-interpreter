@@ -26,7 +26,7 @@ export class Parser {
     }
 
     parse() {
-        let funMap = new Map();
+        let funMap = {};
         let instructions = [];
         let instruction = null;
 
@@ -34,7 +34,7 @@ export class Parser {
             instruction = null;
             instruction = this._parseFuncDef();
             if (instruction) {
-                funMap.set(instruction.sym, instruction);
+                funMap[instruction.sym] = instruction;
             } else {
                 instruction = this._parseCommand();
                 if (instruction) instructions.push(instruction);
@@ -456,7 +456,7 @@ export class Parser {
                     tokenType.INT,
                     tokenType.IDENTIFIER,
                 ]);
-            const arg = this._parseVarOrAttribute();
+            const arg = this._parseVarOrAttributeOrFunCall();
             const token = this.current_token;
             if (arg) args.push(arg);
             else if (this._eatOnlyIfIs(tokenType.FLOAT))
