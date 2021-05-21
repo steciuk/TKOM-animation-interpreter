@@ -80,21 +80,20 @@ export class Parser {
 
         do {
             command = null;
-            if (this.current_token.type === tokenType.RETURN) {
-                const token = this.current_token;
-                this._eat(tokenType.RETURN);
-                const returnVal = this._parseVarOrAttribute();
-                command = new ReturnStatement(token, returnVal);
-                this._eat(tokenType.SEMICOLON);
-            } else {
-                command = this._parseCommand();
-            }
+            command = this._parseCommand();
             if (command) commands.push(command);
         } while (command);
 
         this._eat(tokenType.CURLYCLOSE);
 
         return commands;
+    }
+
+    _parseReturn() {
+        const token = this.current_token;
+        if (!this._eatOnlyIfIs(tokenType.RETURN)) return null;
+        const returnVal = this._parseArithExpression();
+        return new ReturnStatement(token, returnVal);
     }
 
     _parseCommand() {
@@ -106,6 +105,9 @@ export class Parser {
             node = this._parseFor();
             if (!node) {
                 node = this._parseIf();
+                if (!node) {
+                    node = this._parseReturn();
+                }
             }
         }
 
@@ -142,7 +144,7 @@ export class Parser {
         const ifBlock = this._parseBlock();
 
         let elseBlock = null;
-        if (this.current_token.type === tokenType.ELSE)
+        if (this._eatOnlyIfIs(tokenType.ELSE, this.current_token))
             elseBlock = this._parseBlock();
 
         return new IfStatement(token, condition, ifBlock, elseBlock);
@@ -268,19 +270,19 @@ export class Parser {
     _parseBaseCondition() {
         let token = this.current_token;
 
-        if (this._eatOnlyIfIs(tokenType.PARENTHOPEN)) {
-            let node = this._parseCondition();
-            if (!right)
-                this._throwSyntaxError([
-                    tokenType.NOT,
-                    tokenType.IDENTIFIER,
-                    tokenType.FLOAT,
-                    tokenType.INT,
-                    tokenType.PARENTHOPEN,
-                ]);
-            this._eat(tokenType.PARENTHCLOSE);
-            return node;
-        }
+        // if (this._eatOnlyIfIs(tokenType.PARENTHOPEN)) { //TODO: w nawiasach tylko arytmetyczne
+        //     let node = this._parseCondition();
+        //     if (!right)
+        //         this._throwSyntaxError([
+        //             tokenType.NOT,
+        //             tokenType.IDENTIFIER,
+        //             tokenType.FLOAT,
+        //             tokenType.INT,
+        //             tokenType.PARENTHOPEN,
+        //         ]);
+        //     this._eat(tokenType.PARENTHCLOSE);
+        //     return node;
+        // }
 
         return this._parseArithExpression();
     }
@@ -455,19 +457,17 @@ export class Parser {
                     tokenType.FLOAT,
                     tokenType.INT,
                     tokenType.IDENTIFIER,
+                    tokenType.MINUS,
                 ]);
-            const arg = this._parseVarOrAttributeOrFunCall();
             const token = this.current_token;
+            const arg = this._parseArithExpression();
             if (arg) args.push(arg);
-            else if (this._eatOnlyIfIs(tokenType.FLOAT))
-                args.push(new Float(token));
-            else if (this._eatOnlyIfIs(tokenType.INT))
-                args.push(new Int(token));
             else if (this.current_token.type !== tokenType.PARENTHCLOSE)
                 this._throwSyntaxError([
                     tokenType.FLOAT,
                     tokenType.INT,
                     tokenType.IDENTIFIER,
+                    tokenType.MINUS,
                 ]);
         } while (this._eatOnlyIfIs(tokenType.COMMA));
 

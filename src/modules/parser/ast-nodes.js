@@ -93,16 +93,16 @@ export class FuncDef extends AstNode {
 export class ReturnStatement extends AstNode {
     constructor(token, returnVal) {
         super(token);
-        this.sym = token.value;
         this.returnVal = returnVal;
     }
 }
 
 export class IfStatement extends AstNode {
-    constructor(token, condition, commands) {
+    constructor(token, condition, ifBlock, elseBlock) {
         super(token);
         this.condition = condition;
-        this.commands = commands;
+        this.ifBlock = ifBlock;
+        this.elseBlock = elseBlock;
     }
 }
 

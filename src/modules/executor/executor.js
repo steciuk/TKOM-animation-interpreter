@@ -6,49 +6,78 @@ import { execNodes } from './exec-nodes.js';
 export class Executor {
     constructor(program) {
         this.program = program;
-        this.instNum = -1;
-        this.currentInst = this.program.instructions[0];
     }
 
-    execute() {
-        let mainScope = new Scope(null);
+    executeProgram() {
+        let scope = new Scope(null);
+        const retVal = this._execute(scope, this.program.instructions);
+        console.log(scope);
+        return retVal;
+    }
 
-        while (this._nextInst()) {
-            if (this._executeAssignment(mainScope)) continue;
+    _execute(scope, instructions) {
+        for (const instruction of instructions) {
+            if (isObjOfClass(instruction, astNodes.Assignment))
+                this._executeAssignment(scope, instruction);
+            else if (isObjOfClass(instruction, astNodes.IfStatement)) {
+                const result = this._executeIf(scope, instruction);
+                if (typeof result !== 'undefined') return result;
+            } else if (isObjOfClass(instruction, astNodes.ForStatement)) {
+                const result = this._executeFor(scope, instruction);
+                if (typeof result !== 'undefined') return result;
+            } else if (isObjOfClass(instruction, astNodes.FuncCall)) {
+                this._executeFunction(scope, instruction);
+            } else if (isObjOfClass(instruction, astNodes.ReturnStatement))
+                return this._executeReturn(scope, instruction);
         }
 
-        console.log(mainScope);
+        return;
     }
 
-    _nextInst() {
-        if (this.instNum < this.program.instructions.length - 1) {
-            this.instNum++;
-            this.currentInst = this.program.instructions[this.instNum];
-            return true;
+    _executeFor(scope, node) {
+        const numOfIterations = this._evaluateValue(
+            scope,
+            node.numOfIterations
+        );
+        for (let i = 0; i < numOfIterations; i++) {
+            let newScope = new Scope(scope);
+            const res = this._execute(newScope, node.commands);
+            if (typeof res !== 'undefined') return res;
         }
-
-        return false;
     }
 
-    _executeAssignment(scope) {
-        if (!isObjOfClass(this.currentInst, astNodes.Assignment)) return null;
+    _executeIf(scope, node) {
+        const newScope = new Scope(scope);
+        const condition = this._evaluateValue(scope, node.condition);
+        console.log(condition);
+        if (isNaN(condition)) throwNonBooleanError(node, condition);
+        let res;
+        if (condition) res = this._execute(newScope, node.ifBlock);
+        else if (node.elseBlock) res = this._execute(newScope, node.elseBlock);
+        if (typeof res !== undefined) return res;
+    }
 
-        let value = this._evaluateValue(scope, this.currentInst.right);
-        //TODO: check if undefined
+    _executeReturn(scope, instruction) {
+        return this._evaluateValue(scope, instruction.returnVal);
+    }
 
-        let variable = null;
-        if (isObjOfClass(this.currentInst.left, astNodes.VarAndAttribute)) {
+    _executeAssignment(scope, instruction) {
+        let value = this._evaluateValue(scope, instruction.right);
+
+        if (isObjOfClass(instruction.left, astNodes.VarAndAttribute)) {
             const [obj, variable] = [
-                ...this._getAttribute(scope, this.currentInst.left),
+                ...this._getAttribute(scope, instruction.left),
             ];
             variable.call(obj, value);
         } else {
-            let variable = searchInScope(scope, this.currentInst.left.sym);
-            scope.vars.set(this.currentInst.left.sym, value);
+            scope.vars.set(instruction.left.sym, value);
         }
+
+        return true;
     }
 
     _evaluateValue(scope, node) {
+        if (!node) return null;
         if (isObjOfClass(node, astNodes.Int)) return node.value;
         if (isObjOfClass(node, astNodes.Float)) return node.value;
         if (isObjOfClass(node, astNodes.UnaryOp)) {
@@ -85,30 +114,39 @@ export class Executor {
         }
         if (node.op === tokenType.PLUS) return l + r;
         if (node.op === tokenType.MINUS) return l - r;
+
+        if (node.op === tokenType.OR) return l || r;
+        if (node.op === tokenType.AND) return l && r;
+        if (node.op === tokenType.GREATER) return l > r;
+        if (node.op === tokenType.LESS) return l < r;
+        if (node.op === tokenType.GREATEROREQUALS) return l >= r;
+        if (node.op === tokenType.LESSOREQUALS) return l <= r;
+        if (node.op === tokenType.EQUALS) return l === r;
+        if (node.op === tokenType.NOTEQUALS) return l === r;
     }
 
-    _evaluateFunction(scope, node) {
+    _executeFunction(scope, node) {
         let func = this.program.funMap[node.sym];
-        if (func) {
-            const result = this._executeUserFunction(func, node.args);
-            if (typeof result === 'undefined') throwNoReturnError(node);
-            return result;
-        }
+        if (func) return this._executeUserFunction(scope, func, node);
         if (this.program.libFunMap) {
             func = this.program.libFunMap[node.sym];
             if (func) {
-                let result;
+                const args = this._evaluateArgs(scope, node.args);
                 // try {
-                result = func(this._evaluateArgs(scope, node.args));
+                return func(args);
                 // } catch (error) {
                 //     throwStdLibError(node, error.message);
                 // }
-                if (typeof result === 'undefined') throwNoReturnError(node);
-                return result;
             }
         }
 
         throwUndefinedError(node);
+    }
+
+    _evaluateFunction(scope, node) {
+        const result = this._executeFunction(scope, node);
+        if (typeof result === 'undefined') throwNoReturnError(node);
+        return result;
     }
 
     _evaluateArgs(scope, args) {
@@ -137,14 +175,22 @@ export class Executor {
         return [obj, func];
     }
 
-    _executeUserFunction(func, args) {
-        //TODO:
-        console.log(func);
-        console.log(args);
+    _executeUserFunction(scope, func, node) {
+        if (func.params.length !== node.args.length)
+            throwWrongArgsNum(node, func.params.length, node.args.length);
+
+        let newScope = new Scope(null);
+        for (let i = 0; i < func.params.length; i++) {
+            const value = this._evaluateValue(scope, node.args[i]);
+            newScope.vars.set(func.params[i].sym, value);
+        }
+
+        return this._execute(newScope, func.commands);
     }
 }
 
 function isObjOfClass(obj, cls) {
+    if (!obj) return false;
     return obj.constructor === cls;
 }
 
@@ -171,6 +217,12 @@ function throwUndefinedError(node) {
     );
 }
 
+function throwNonBooleanError(node, value) {
+    throw new ExecutorError(
+        `${node.token.lineNum} : ${node.token.charNum} : Can't convert ${value} to boolean`
+    );
+}
+
 function throwNoAttributeError(node, variable, attribute) {
     throw new ExecutorError(
         `${node.token.lineNum} : ${node.token.charNum} : Object of type ${variable.constructor.name} doesn't have property ${attribute}`
@@ -179,34 +231,34 @@ function throwNoAttributeError(node, variable, attribute) {
 
 function throwDivideBy0Error(node) {
     throw new ExecutorError(
-        `${node.token.lineNum} : ${node.token.charNum} : Division by 0!`
+        `${node.token.lineNum} : ${node.token.charNum} : Division by 0`
     );
 }
 
 function throwNoReturnError(node) {
     throw new ExecutorError(
-        `${node.token.lineNum} : ${node.token.charNum} : Function "${node.sym}" was expected to return a value!`
+        `${node.token.lineNum} : ${node.token.charNum} : Function "${node.sym}" was expected to return a value`
     );
 }
 
 function throwOperatorError(node) {
     throw new ExecutorError(
-        `${node.token.lineNum} : ${node.token.charNum} : Can't use arith operator on non-numeric value!`
+        `${node.token.lineNum} : ${
+            node.token.charNum
+        } : Can't use arith/cond operator on non-numeric value
+        GOT: ${typeof node}`
     );
+}
+
+function throwWrongArgsNum(node, expected, got) {
+    throw new ExecutorError(`${node.token.lineNum} : ${node.token.charNum} : Incorrect number of arguments
+    Expected: ${expected}
+    Got: ${got}`);
 }
 
 function throwStdLibError(node, message) {
     throw new ExecutorError(
         `${node.token.lineNum} : ${node.token.charNum} : ${message}`
-    );
-}
-
-// got - object, expected - class
-function throwWrongTypeError(node, got, expected) {
-    throw new ExecutorError(
-        `${node.token.lineNum} : ${node.token.charNum} : Wrong datatype! 
-        Expected: ${expected.name}, 
-        Got : ${got.constructor.name}`
     );
 }
 

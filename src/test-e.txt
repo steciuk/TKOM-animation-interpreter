@@ -1,17 +1,7 @@
-func eyy(aa, b, c) {
-    a = 34244 * -234 + 32 / (b + c);
-    return a;
-};
-
-s = 1 * 2 / 3 * 4 / 5;
-
-if(a == b and 4 != 4 or b.f.r >= 3+3*2) {
-    inst() * a() * b() * shape;
-    if(b) {
-        rrrr = 3;
-    };
-};
-
-for(3 - 1) {
-    eyy(34);
+a = 1;
+b = 1;
+if((a+b)>3){
+    clg(1);
+}else{
+    clg(2);
 };

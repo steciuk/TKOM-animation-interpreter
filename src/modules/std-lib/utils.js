@@ -22,6 +22,16 @@ function isObjOfClassStrict(obj, cls) {
     return true;
 }
 
+function isObjChildOfClassStrict(obj, cls) {
+    if (!isObjChildOfClass(obj, cls))
+        throwWrongArgType(cls.name, obj.constructor.name);
+    return true;
+}
+
+function isObjChildOfClass(obj, cls) {
+    return obj instanceof cls;
+}
+
 function isObjOfClass(obj, cls) {
     return obj.constructor === cls;
 }
@@ -45,6 +55,10 @@ function throwWrongArgsNum(expected, got) {
     Got: ${got}`);
 }
 
+function throwNoCanvas() {
+    throw new Error(`No canvas!`);
+}
+
 export const utils = {
     isArgInLimitsStrict: isArgInLimitsStrict,
     isIntStrict: isIntStrict,
@@ -54,4 +68,7 @@ export const utils = {
     throwWrongArgType: throwWrongArgType,
     throwArgBeyondLimits: throwArgBeyondLimits,
     throwWrongArgsNum: throwWrongArgsNum,
+    isObjChildOfClassStrict: isObjChildOfClassStrict,
+    throwNoCanvas: throwNoCanvas,
+    isObjChildOfClass: isObjChildOfClass,
 };

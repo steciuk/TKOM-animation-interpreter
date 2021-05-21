@@ -1,3 +1,30 @@
-a = circle(p(1, 2), 12, rgb(100, 11, 0));
-a.color.r = 1;
-b = circle(p(a.color.r, 2), 1, a.color);
+canvas(400, 300);
+red = rgb(255, 0, 0);
+radius = 40;
+wheel1 = circle(p(300, 260), radius, red);
+wheel2 = circle(p(100, 260), radius, red);
+body = polygon(
+	p(40, 260),
+	p(360, 260),
+	p(360, 200),
+	p(280, 200),
+	p(240, 160),
+	p(160, 160),
+	p(120, 200),
+	p(40, 200),
+	rgb(0, 255, 0)
+);
+blue = rgb(0, 0, 255);
+window1 = polygon(p(130, 200), p(160, 170), p(160, 200), blue);
+window2 = rectangle(p(170, 170), 50, 30, blue);
+car = group(wheel1, wheel2, body, window1, window2);
+window2.color = rgb(100, 100, 100);
+draw(car);
+
+for(10) {
+    move(car, -10, 0);
+    draw(car);
+    clg(1);
+    pause(100);
+    #clear();#
+};

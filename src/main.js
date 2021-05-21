@@ -1,7 +1,7 @@
 import { FileReaderError } from './modules/error-handler.js';
 import { Parser } from './modules/parser/parser.js';
 import { Executor } from './modules/executor/executor.js';
-import { stdLib } from './modules/std-lib/objects.js';
+import { stdLib } from './modules/std-lib/std-lib.js';
 
 const startBtnEl = document.getElementById('start');
 const inputEl = document.getElementById('input');
@@ -45,7 +45,7 @@ function interpret() {
     program.setLibFunMap(stdLib);
     console.log(program);
     let executor = new Executor(program);
-    console.log(executor.execute());
+    console.log(executor.executeProgram());
 
     // let token = undefined
     // do {
