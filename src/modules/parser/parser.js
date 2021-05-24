@@ -16,6 +16,7 @@ import {
     ReturnStatement,
     IfStatement,
     Assignment,
+    AsyncForStatement,
 } from './ast-nodes.js';
 import { Program } from './program.js';
 
@@ -104,15 +105,47 @@ export class Parser {
         if (!node) {
             node = this._parseFor();
             if (!node) {
-                node = this._parseIf();
+                node = this._parseAsyncFor();
                 if (!node) {
-                    node = this._parseReturn();
+                    node = this._parseIf();
+                    if (!node) {
+                        node = this._parseReturn();
+                    }
                 }
             }
         }
 
         if (node !== null) this._eat(tokenType.SEMICOLON);
         return node;
+    }
+
+    _parseAsyncFor() {
+        const token = this.current_token;
+        if (!this._eatOnlyIfIs(tokenType.AFOR)) return null;
+
+        this._eat(tokenType.PARENTHOPEN);
+        const numOfIterations = this._parseArithExpression();
+        if (!numOfIterations)
+            this._throwSyntaxError([
+                tokenType.MINUS,
+                tokenType.IDENTIFIER,
+                tokenType.FLOAT,
+                tokenType.INT,
+                tokenType.PARENTHOPEN,
+            ]);
+        this._eat(tokenType.COMMA);
+        const delay = this._parseArithExpression();
+        if (!numOfIterations)
+            this._throwSyntaxError([
+                tokenType.MINUS,
+                tokenType.IDENTIFIER,
+                tokenType.FLOAT,
+                tokenType.INT,
+                tokenType.PARENTHOPEN,
+            ]);
+        this._eat(tokenType.PARENTHCLOSE);
+        const block = this._parseBlock();
+        return new AsyncForStatement(token, numOfIterations, delay, block);
     }
 
     _parseFor() {

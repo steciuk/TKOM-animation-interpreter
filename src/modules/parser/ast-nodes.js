@@ -114,6 +114,15 @@ export class ForStatement extends AstNode {
     }
 }
 
+export class AsyncForStatement extends AstNode {
+    constructor(token, numOfIterations, delay, commands) {
+        super(token);
+        this.numOfIterations = numOfIterations;
+        this.delay = delay;
+        this.commands = commands;
+    }
+}
+
 export const astNodes = {
     BinaryOp: BinaryOp,
     Assignment: Assignment,
@@ -129,4 +138,5 @@ export const astNodes = {
     ReturnStatement: ReturnStatement,
     IfStatement: IfStatement,
     ForStatement: ForStatement,
+    AsyncForStatement: AsyncForStatement,
 };

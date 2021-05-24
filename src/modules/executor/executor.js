@@ -11,10 +11,10 @@ export class Executor {
     executeProgram() {
         let scope = new Scope(null);
         const retVal = this._execute(scope, this.program.instructions);
-        console.log(scope);
         return retVal;
     }
 
+    //TODO: rewrite as async promise chain
     _execute(scope, instructions) {
         for (const instruction of instructions) {
             if (isObjOfClass(instruction, astNodes.Assignment))
@@ -25,6 +25,9 @@ export class Executor {
             } else if (isObjOfClass(instruction, astNodes.ForStatement)) {
                 const result = this._executeFor(scope, instruction);
                 if (typeof result !== 'undefined') return result;
+            } else if (isObjOfClass(instruction, astNodes.AsyncForStatement)) {
+                const result = this._executeAsyncFor(scope, instruction);
+                if (typeof result !== 'undefined') return result;
             } else if (isObjOfClass(instruction, astNodes.FuncCall)) {
                 this._executeFunction(scope, instruction);
             } else if (isObjOfClass(instruction, astNodes.ReturnStatement))
@@ -34,11 +37,30 @@ export class Executor {
         return;
     }
 
+    // _executeAsyncFor(scope, node) {
+    //     const numOfIterations = this._evaluateValue(
+    //         scope,
+    //         node.numOfIterations
+    //     );
+    //     const delay = this._evaluateValue(scope, node.delay);
+
+    //     let intervalID = setInterval(loop, delay, this);
+    //     let i = 0;
+    //     function loop(self) {
+    //         let newScope = new Scope(scope);
+    //         const res = self._execute(newScope, node.commands);
+    //         if (typeof res !== 'undefined') return res; //TODO: add promise returner
+    //         i++;
+    //         if (i >= numOfIterations) clearInterval(intervalID);
+    //     }
+    // }
+
     _executeFor(scope, node) {
         const numOfIterations = this._evaluateValue(
             scope,
             node.numOfIterations
         );
+
         for (let i = 0; i < numOfIterations; i++) {
             let newScope = new Scope(scope);
             const res = this._execute(newScope, node.commands);
@@ -87,7 +109,8 @@ export class Executor {
         }
         if (isObjOfClass(node, astNodes.Var)) {
             const variable = searchInScope(scope, node.sym);
-            if (!variable) throwUndefinedError(node);
+            if (variable === null || typeof variable === 'undefined')
+                throwUndefinedError(node);
 
             return variable;
         }
@@ -205,7 +228,7 @@ function searchInScope(scope, sym) {
     while (scope.parentScope !== null) {
         scope = scope.parentScope;
         variable = scope.vars.get(sym);
-        if (variable) return variable;
+        if (typeof variable !== 'undefined') return variable;
     }
 
     return null;

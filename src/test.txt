@@ -18,13 +18,14 @@ blue = rgb(0, 0, 255);
 window1 = polygon(p(130, 200), p(160, 170), p(160, 200), blue);
 window2 = rectangle(p(170, 170), 50, 30, blue);
 car = group(wheel1, wheel2, body, window1, window2);
-window2.color = rgb(100, 100, 100);
-draw(car);
 
-for(10) {
-    move(car, -10, 0);
-    draw(car);
-    clg(1);
-    pause(100);
-    #clear();#
+i = 0;
+
+for(200) {
+	move(car, -1, 0);
+	wheel1.color = rgb(i, 0, 0);
+	i = i+1;
+	clg(i);
+	draw (car);
+    clear();
 };

@@ -227,23 +227,23 @@ function draw(args) {
     }
 
     function drawPolygon(ctx, obj) {
-        //       window.requestAnimationFrame(() => {
-        ctx.beginPath();
-        ctx.moveTo(obj._points[0]._x, obj._points[0]._y);
-        for (let i = 1; i < obj._points.length; i++)
-            ctx.lineTo(obj._points[i]._x, obj._points[i]._y);
-        ctx.fillStyle = createRgb(obj._color);
-        ctx.fill();
-        //        });
+        window.requestAnimationFrame(() => {
+            ctx.beginPath();
+            ctx.moveTo(obj._points[0]._x, obj._points[0]._y);
+            for (let i = 1; i < obj._points.length; i++)
+                ctx.lineTo(obj._points[i]._x, obj._points[i]._y);
+            ctx.fillStyle = createRgb(obj._color);
+            ctx.fill();
+        });
     }
 
     function drawCircle(ctx, obj) {
-        //       window.requestAnimationFrame(() => {
-        ctx.beginPath();
-        ctx.arc(obj._point._x, obj._point._y, obj._r, 0, Math.PI * 2);
-        ctx.fillStyle = createRgb(obj._color);
-        ctx.fill();
-        //        });
+        window.requestAnimationFrame(() => {
+            ctx.beginPath();
+            ctx.arc(obj._point._x, obj._point._y, obj._r, 0, Math.PI * 2);
+            ctx.fillStyle = createRgb(obj._color);
+            ctx.fill();
+        });
     }
 
     function drawObjects(ctx, objects) {

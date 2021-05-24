@@ -8,3 +8,5 @@ true = 1, false = 0
 function doesn't have to have return
 can't modify objects in group using .name operator
 transformations as normal functions
+for is made async so if there is too smal delay in loop execution can lead to unexpected results
+can't return in for as its called asynchronously
