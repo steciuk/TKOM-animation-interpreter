@@ -37,30 +37,32 @@ export class Executor {
         return;
     }
 
-    // _executeAsyncFor(scope, node) {
-    //     const numOfIterations = this._evaluateValue(
-    //         scope,
-    //         node.numOfIterations
-    //     );
-    //     const delay = this._evaluateValue(scope, node.delay);
+    _executeAsyncFor(scope, node) {
+        const numOfIterations = this._evaluateValue(
+            scope,
+            node.numOfIterations
+        );
+        const delay = this._evaluateValue(scope, node.delay);
+        if (numOfIterations < 0 || delay < 0) throwWrongForArgsError(node);
 
-    //     let intervalID = setInterval(loop, delay, this);
-    //     let i = 0;
-    //     function loop(self) {
-    //         let newScope = new Scope(scope);
-    //         const res = self._execute(newScope, node.commands);
-    //         if (typeof res !== 'undefined') return res; //TODO: add promise returner
-    //         i++;
-    //         if (i >= numOfIterations) clearInterval(intervalID);
-    //     }
-    // }
+        let intervalID = setInterval(loop, delay, this);
+        let i = 0;
+        function loop(self) {
+            let newScope = new Scope(scope);
+            const res = self._execute(newScope, node.commands);
+            if (typeof res !== 'undefined') return res; //TODO: add promise returner
+            i++;
+            if (i >= numOfIterations && numOfIterations !== 0)
+                clearInterval(intervalID);
+        }
+    }
 
     _executeFor(scope, node) {
         const numOfIterations = this._evaluateValue(
             scope,
             node.numOfIterations
         );
-
+        if (numOfIterations < 0) throwWrongForArgsError(node);
         for (let i = 0; i < numOfIterations; i++) {
             let newScope = new Scope(scope);
             const res = this._execute(newScope, node.commands);
@@ -71,7 +73,6 @@ export class Executor {
     _executeIf(scope, node) {
         const newScope = new Scope(scope);
         const condition = this._evaluateValue(scope, node.condition);
-        console.log(condition);
         if (isNaN(condition)) throwNonBooleanError(node, condition);
         let res;
         if (condition) res = this._execute(newScope, node.ifBlock);
@@ -92,7 +93,7 @@ export class Executor {
             ];
             variable.call(obj, value);
         } else {
-            scope.vars.set(instruction.left.sym, value);
+            setInScope(scope, instruction.left.sym, value);
         }
 
         return true;
@@ -122,6 +123,8 @@ export class Executor {
             return this._evaluateFunction(scope, node);
         if (isObjOfClass(node, astNodes.BinaryOp))
             return this._evaluateBinary(scope, node);
+
+        //TODO: return null or throw
     }
 
     _evaluateBinary(scope, node) {
@@ -155,11 +158,11 @@ export class Executor {
             func = this.program.libFunMap[node.sym];
             if (func) {
                 const args = this._evaluateArgs(scope, node.args);
-                // try {
-                return func(args);
-                // } catch (error) {
-                //     throwStdLibError(node, error.message);
-                // }
+                try {
+                    return func(args);
+                } catch (error) {
+                    throwStdLibError(node, error.message);
+                }
             }
         }
 
@@ -221,9 +224,27 @@ function isObjChildOfClass(obj, cls) {
     return obj instanceof cls;
 }
 
+function setInScope(scope, sym, value) {
+    let variable = scope.vars.get(sym);
+    if (typeof variable !== 'undefined') scope.vars.set(sym, value);
+
+    let tempScope = scope;
+    while (tempScope.parentScope !== null) {
+        tempScope = tempScope.parentScope;
+        variable = tempScope.vars.get(sym);
+        if (typeof variable !== 'undefined') {
+            tempScope.vars.set(sym, value);
+            return variable;
+        }
+    }
+
+    scope.vars.set(sym, value);
+    return variable;
+}
+
 function searchInScope(scope, sym) {
     let variable = scope.vars.get(sym);
-    if (variable) return variable;
+    if (typeof variable !== 'undefined') return variable;
 
     while (scope.parentScope !== null) {
         scope = scope.parentScope;
@@ -243,6 +264,12 @@ function throwUndefinedError(node) {
 function throwNonBooleanError(node, value) {
     throw new ExecutorError(
         `${node.token.lineNum} : ${node.token.charNum} : Can't convert ${value} to boolean`
+    );
+}
+
+function throwWrongForArgsError(node) {
+    throw new ExecutorError(
+        `${node.token.lineNum} : ${node.token.charNum} : Wrong for args!`
     );
 }
 

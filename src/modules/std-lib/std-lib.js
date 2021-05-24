@@ -266,6 +266,38 @@ function pause(args) {
     } while (currentDate - date < args[0]);
 }
 
+function rotate(args) {
+    const expected = [Transformable, Point, Number];
+    rotateObjects([args[0]], args[1], args[2]);
+
+    function degToRad(degrees) {
+        let pi = Math.PI;
+        return degrees * (pi / 180);
+    }
+
+    function rotatePolygon(obj, p, a) {
+        for (const point of obj._points) {
+            let tempX = point._x - p._x;
+            let tempY = point._y - p._y;
+            let tempX2 =
+                tempX * Math.cos(degToRad(a)) - tempY * Math.sin(degToRad(a));
+            let tempY2 =
+                tempY * Math.cos(degToRad(a)) + tempX * Math.sin(degToRad(a));
+
+            point._x = tempX2 + p._x;
+            point._y = tempY2 + p._y;
+        }
+    }
+
+    function rotateObjects(objects, p, a) {
+        for (const obj of objects) {
+            if (utils.isObjChildOfClass(obj, Polygon)) rotatePolygon(obj, p, a);
+            else if (utils.isObjChildOfClass(obj, Group))
+                rotateObjects(obj._shapes, p, a);
+        }
+    }
+}
+
 function move(args) {
     utils.isObjChildOfClassStrict(args[0], Transformable);
     utils.checkArgsStrict([args[1], args[2]], [Number, Number]);
@@ -320,4 +352,5 @@ export const stdLib = {
     move: move,
     clear: clear,
     clg: clg,
+    rotate: rotate,
 };

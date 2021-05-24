@@ -46,13 +46,4 @@ function interpret() {
     console.log(program);
     let executor = new Executor(program);
     console.log(executor.executeProgram());
-
-    // let token = undefined
-    // do {
-    //     token = scanner.getToken()
-    //     console.log(token)
-    //     let tokenEL = document.createElement('pre')
-    //     tokenEL.innerHTML = token.toString()
-    //     tokensDiv.appendChild(tokenEL)
-    // } while(token.type !== 'EOF')
 }

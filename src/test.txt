@@ -20,12 +20,13 @@ window2 = rectangle(p(170, 170), 50, 30, blue);
 car = group(wheel1, wheel2, body, window1, window2);
 
 i = 0;
-
-for(200) {
-	move(car, -1, 0);
-	wheel1.color = rgb(i, 0, 0);
+afor(500, 10) {
 	i = i+1;
-	clg(i);
+	if(i < 250){
+		move(car, -1, 0);
+	}else{
+		move(car, 1, 0);
+	};
 	draw (car);
     clear();
 };

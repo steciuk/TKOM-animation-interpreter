@@ -1,7 +1,10 @@
-a = 1;
-b = 1;
-if((a+b)>3){
-    clg(1);
-}else{
-    clg(2);
+func calculateCenterOfSquare(square){
+	p1 = p(square.point.x + square.width / 2, square.point.y + square.height / 2);
+	return p1;
 };
+canvas(400, 300);
+i = 0;
+square = rectangle(p(50, 100), 100, 100, rgb(i, i, i));
+center = calculateCenterOfSquare(square);
+rotate(square, center, 45);
+draw(square);
