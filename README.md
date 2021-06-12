@@ -3,6 +3,9 @@
 _Autor: Adam Steciuk (300263)_
 _kwiecień 2021_
 
+**Prowadzący projekt**: dr Piotr Gawkowski  
+**Ocena**: 50/50
+
 Projekt polega na stworzeniu interpretera języka do budowania dwuwymiarowych scen graficznych oraz ich animowania. Wykonany zostanie w języku JavaScript z użyciem biblioteki [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). W ramach projektu utworzony zostanie prosty serwis internetowy pozwalający na wgranie pliku z kodem do zinterpretowania oraz wyświetlenie rezultatu jego wykonania.
 
 ### Opis funkcjonalny
